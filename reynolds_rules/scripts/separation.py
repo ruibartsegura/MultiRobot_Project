@@ -3,8 +3,9 @@ import rospy
 import tf2_ros
 import math
 
-from geometry_msgs.msg import Twist, TransformStamped, Quaternion, PoseStamped
+from geometry_msgs.msg import Twist, TransformStamped, Quaternion, PoseStamped, Pose
 from tf2_geometry_msgs import do_transform_pose
+from nav_msgs.msg import Odometry
 
 class SeparationNode():
 
@@ -30,10 +31,21 @@ class SeparationNode():
         for name in self.robot_names:
             topic = name + "/cmd_vel"
             self.publishers[name] = rospy.Publisher(topic, Twist, queue_size=1)
-        
+
+        # Make a dictionary, it will match each namespace with the corresponding data of position
+        self.poses = {}
+        for name in self.robot_names:
+            topic = name + "/odom"
+            rospy.Subscriber(topic, Odometry, self.callback_position)
+
         # Timer Callback
         rospy.Timer(rospy.Duration(1.0 / 30.0), self.run)
 
+    def callback_position(self, data):
+        # Get which robot is getting the info
+        name = data.header.frame_id.strip("/").removesuffix("odom").strip("/")
+        print(name)
+        self.poses[name] = data.pose 
 
     def run(self, _):
         # Main while loop.
@@ -44,7 +56,11 @@ class SeparationNode():
             self.cmd_vel.angular.z = 1
 
             # How to publish
-            self.publishers[self.robot_names[9]].publish(self.cmd_vel)
+            for name in self.robot_names:
+                self.publishers[name].publish(self.cmd_vel)
+            
+            print(self.poses[self.robot_names[0]])
+
 
 
 if __name__ == '__main__':
