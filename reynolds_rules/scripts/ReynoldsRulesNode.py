@@ -38,7 +38,7 @@ class ReynoldsRulesNode:
 if __name__ == "__main__":
     rospy.init_node("ReynoldsRulesNode")
     try:
-        node = SeparationNode()
+        node = ReynoldsRulesNode()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
