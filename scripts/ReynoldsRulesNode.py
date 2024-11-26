@@ -68,7 +68,20 @@ class ReynoldsRulesNode:
         pass
 
     def weighted_sum(self):
-        pass
+        i = 0
+        for name in robot_names:
+            x_sep, y_sep = separation_rule()
+            x_ali, y_ali = alignment_rule()
+            x_cohe, y_cohe = cohesion_rule()
+            x_nav, y_nav = navigation_rule()
+            x_obst, y_obst = obstacle_avoidance_rule()
+
+            vel = Twist()
+            vel.x = x_sep + x_ali + x_cohe + x_nav + x_obst
+            vel.y = y_sep + y_ali + y_cohe + y_nav + y_obst
+            self.publishers[name].publish(vel)
+
+            i =+ 1
 
 
 if __name__ == "__main__":
