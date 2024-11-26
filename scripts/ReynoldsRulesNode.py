@@ -5,6 +5,7 @@ import tf2_ros
 
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import OccupancyGrid, Odometry
+from typing import List, Tuple
 
 
 class ReynoldsRulesNode:
@@ -64,8 +65,15 @@ class ReynoldsRulesNode:
     def navigation_rule(self):
         pass
 
-    def obstacle_avoidance_rule(self):
-        pass
+    def obstacle_avoidance_rule(self) -> List[Tuple[float, float]]:
+        # perception: for now just a square
+        #
+
+        # approach: force field
+        # vec:  direction vector of obstacle
+        # d:    distance
+
+        return (0, 0)
 
     def weighted_sum(self):
         pass
