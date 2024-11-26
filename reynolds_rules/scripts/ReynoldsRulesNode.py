@@ -2,16 +2,26 @@
 
 import rospy
 
+from nav_msgs.msg import OccupancyGrid
+
 
 class ReynoldsRulesNode:
     def __init__(self):
         pass
 
-    def map_subscription(self):
-        pass
+        self.map_sub = rospy.Subscriber("map", OccupancyGrid, self.callback_map)
+        self.map: OccupancyGrid | None = None
 
-    def map_lookup(self):
-        pass
+    def callback_map(self, msg: OccupancyGrid):
+        self.map = msg
+
+    def map_lookup(self, xy) -> bool:
+        i = int((xy[1] - self.map.info.origin.position.y) / self.map.info.resolution)
+        j = int((xy[0] - self.map.info.origin.position.x) / self.map.info.resolution)
+        index = self.map.info.width * i + j
+        if not 0 <= index < len(self.map.data):
+            return False
+        return self.map.data[index] == 100
 
     def separation_rule(self):
         pass
