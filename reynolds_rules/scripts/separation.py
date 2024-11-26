@@ -44,8 +44,7 @@ class SeparationNode():
     def callback_position(self, data):
         # Get which robot is getting the info
         name = data.header.frame_id.strip("/").removesuffix("odom").strip("/")
-        print(name)
-        self.poses[name] = data.pose 
+        self.poses[name] = data#.pose 
 
     def run(self, _):
         # Main while loop.
@@ -56,8 +55,8 @@ class SeparationNode():
             self.cmd_vel.angular.z = 1
 
             # How to publish
-            for name in self.robot_names:
-                self.publishers[name].publish(self.cmd_vel)
+            #for name in self.robot_names:
+             #   self.publishers[name].publish(self.cmd_vel)
             
             print(self.poses[self.robot_names[0]])
 
