@@ -5,6 +5,7 @@ from RuleNode import RuleNode
 
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Vector3
+from reynolds_rules.msg import VectorArray
 
 
 # Implements cohesion algorithm to the swarm
@@ -37,13 +38,14 @@ class CohesionRuleNode(RuleNode):
     # Publish list with all vectors to average position to achieve cohesion
     def control_cycle(self, _):
         cohesion_pos = self.calc_average_pos()
-        cohesion_vectors = []
+        cohesion_vectors = VectorArray()
 
         for robot in self.robots:
             cohesion_vector = self.calc_vector(robot.pose.position, cohesion_pos)
             cohesion_vectors.append(cohesion_vector)
 
-        # self.pub.publish(cohesion_vectors)
+        self.pub.publish(cohesion_vectors)
+
 
 if __name__ == "__main__":
     rospy.init_node("cohesion_rule")
