@@ -23,11 +23,6 @@ class RuleNode:
             topic = "/robot_" + str(i) + "/odom"
             rospy.Subscriber(topic, Odometry, self.robot_callback)
 
-        rospy.sleep(1)
-
-        rospy.Timer(rospy.Duration(1 / rate_per_second), self.control_cycle)
-        # rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)
-
     # Saves and updates list with odom of all robots
     def robot_callback(self, data: Odometry):
         begin = data.header.frame_id.find("/robot_") + 7
@@ -36,6 +31,6 @@ class RuleNode:
         i = int(data.header.frame_id[begin:end])
         self.robots[i] = data
 
-    # Abstract method
+    # Abstract. Principal method.
     def control_cycle(self, _):
         pass
