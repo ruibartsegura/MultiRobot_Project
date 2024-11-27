@@ -3,8 +3,7 @@
 import rospy
 
 from nav_msgs.msg import Odometry
-# from geometry_msgs.msg import Vector3
-
+from reynolds_rules.msg import ArrayVectors # Import the custom message
 
 # Parent class os rules nodes classes
 class RuleNode:
@@ -13,10 +12,10 @@ class RuleNode:
         self.multiplier = rospy.get_param("~" + name + "_multiplier", 1)
 
         # Set common atributes of rules
-        self.robots = []
+        self.robots = [None] * self.n_robots
 
         rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)
-        # self.pub = rospy.Publisher("/" + name + "_vectors", Vector3, queue_size=1)
+        self.pub = rospy.Publisher("/" + name + "_vectors", ArrayVectors, queue_size=1)
 
         # Creates a suscriber for each robot, but with the same callback
         for i in range(self.n_robots):

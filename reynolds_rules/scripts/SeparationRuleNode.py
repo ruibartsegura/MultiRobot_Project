@@ -4,38 +4,68 @@ import tf2_ros
 import math
 
 from RuleNode import RuleNode
-from geometry_msgs.msg import Twist, TransformStamped, Quaternion, PoseStamped, Pose
-from tf2_geometry_msgs import do_transform_pose
-from nav_msgs.msg import Odometry
+from reynolds_rules.msg import ArrayVectors # Import the custom message
+from geometry_msgs.msg import Point
+
 
 class SeparationRuleNode(RuleNode):
     def __init__(self):
-        super().__init__("separation", 10)
+        super().__init__("separation", 100)
 
     
-    def get_distance(pos1, pos2):
+    def get_distance(self, pos1, pos2):
         x = pos1.x - pos2.x
         y = pos1.y - pos2.y
-        return sqr(x * x + y * y)
+        return math.sqrt(x * x + y * y)
 
-    def calc_vector(position, num):
-        for i in range(self.n_robots):
-            #print(f"Distancia entre {num} y {i} = {self.get_distance(position, self.robot[i].position)}")
-            if i != num or self.get_distance(position, self.robots[i].position) < 10:
-                # Calc vector sep
-                print("Distancia valida")
-        return [0, 0]
+    def calc_vector(self, position, num):
+        repulsive_vector = Point()
+        # k is the cte of force
+        k = 0.1
+
+        for i in range(self.n_robots):            
+            # Avoid calculating the robotr's own vector
+            if i != num:
+                # Get the distance betwen the robots
+                dist = self.get_distance(position, self.robots[i].pose.pose.position)
+
+                # Check if the distance is in the radious
+                if dist > 0.0 and dist < 0.2:
+                    #Get the x, y coords of the vector
+                    x = position.x - self.robots[i].pose.pose.position.x
+                    y = position.y - self.robots[i].pose.pose.position.y
+
+                    # Normalize the vector
+                    norm = math.sqrt(x * x + y * y)
+                    if norm > 0:
+                        direction = [x / norm, y / norm]
+                    else:
+                        direction = [0.0, 0.0]
+
+                    # Magnitude od the repulsice vector
+                    magnitude = k / (dist*dist)
+
+                    # Sum to the total the repulsive vector of robot_i
+                    repulsive_vector.x += magnitude * direction[0]
+                    repulsive_vector.y += magnitude * direction[1]
+
+        return repulsive_vector
 
     
     def control_cycle(self, _):
-        vectors = [self.n_robots]
+        msg = ArrayVectors()
+        separation_vectors = []
         
         for i in range(self.n_robots):
-            print(f"i = {i}")
-            vectors.append(self.calc_vector(self.robots[i].position, i))
+            separation_vectors.append(self.calc_vector(self.robots[i].pose.pose.position, i))
+
+        msg.vectors = separation_vectors
+        self.pub.publish(msg)
 
 
 if __name__ == '__main__':
     rospy.init_node("separation_rule")
     node = SeparationRuleNode()
     rospy.spin()
+
+# TODO Create a param to the distance of separation
