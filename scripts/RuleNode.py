@@ -15,10 +15,6 @@ class RuleNode:
         # Set common atributes of rules
         self.robots = [None] * self.n_robots
 
-<<<<<<< HEAD:scripts/RuleNode.py
-        rospy.Timer(rospy.Duration(1 / rate_per_second), self.control_cycle)
-=======
->>>>>>> 7f6dd74 (Separation working in the sum of weights):reynolds_rules/scripts/RuleNode.py
         self.pub = rospy.Publisher("/" + name + "_vectors", ArrayVectors, queue_size=1)
 
         # Creates a suscriber for each robot, but with the same callback
@@ -28,7 +24,8 @@ class RuleNode:
 
         rospy.sleep(1)
 
-        rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)
+        rospy.Timer(rospy.Duration(1 / rate_per_second), self.control_cycle)
+        #rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)
 
     # Saves and updates list with odom of all robots
     def robot_callback(self, data: Odometry):
