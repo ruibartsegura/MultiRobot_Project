@@ -20,13 +20,13 @@ class RuleNode:
 
         # Creates a suscriber for each robot, but with the same callback
         for i in range(self.n_robots):
-            topic = "/robot_" + str(i + 1) + "/odom"
+            topic = "/robot_" + str(i) + "/odom"
             rospy.Subscriber(topic, Odometry, self.robot_callback)
 
     # Saves and updates list with odom of all robots
     def robot_callback(self, data):
-        id = int(data.child_frame_id.removesuffix("/odom").removeprefix("/robot_"))
-        self.robots[id - 1] = data
+        id = int(data.header.frame_id.removesuffix("/odom").removeprefix("/robot_"))
+        self.robots[id] = data
 
     # Abstract method
     def control_cycle(self, _):
