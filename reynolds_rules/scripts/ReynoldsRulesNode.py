@@ -1,50 +1,42 @@
 #!/usr/bin/env python3
 
 import rospy
+import tf2_ros
 
-from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import OccupancyGrid, Odometry
 
 
 class ReynoldsRulesNode:
     def __init__(self):
-        # Private param: number of robots 
-        self.n_robots = rospy.get_param('~number_robots', 10)
+        # Private param: number of robots
+        self.n_robots = rospy.get_param("~number_robots", 10)
 
-        # Make a tuple with the correct namespace of the robots
-        # I use a tuple to avoid having problems later if by mistake the list is changed
-        self.robot_names = []
-        name = "robot_" 
-        for num in range (self.n_robots):
-            new_name = name + str(num)
-            self.robot_names.append(new_name)
-        self.robot_names = tuple(self.robot_names)
+        # using tuple to make the list immutable
+        self.robot_names = tuple([f"robot_{num}" for num in range(self.n_robots)])
 
-        # TF buffer and listener
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         # Make a dictionary, it will match each namespace with the corresponding publisher
         # To use the publisher self.publishers[self.robot_names[nº]].publish(TWIST)
-        self.publishers = {}
-        for name in self.robot_names:
-            topic = name + "/cmd_vel"
-            self.publishers[name] = rospy.Publisher(topic, Twist, queue_size=1)
+        self.publishers = dict(
+            (name, rospy.Publisher(f"{name}/cmd_vel", Twist, queue_size=1))
+            for name in self.robot_names
+        )
 
-        # Make a dictionary, it will match each namespace with the corresponding data of position
+        # Make a dictionary, it will match each namespace with the corresponding position data
         # To get position of a robot self.poses[self.robot_names[0]]
         self.poses = {}
         for name in self.robot_names:
-            topic = name + "/odom"
-            rospy.Subscriber(topic, Odometry, self.callback_position)
+            rospy.Subscriber(f"{name}/odom", Odometry, self.callback_position)
+
+        self.map: OccupancyGrid | None = None
+        rospy.Subscriber("map", OccupancyGrid, self.callback_map)
 
     def callback_position(self, data):
-        # Get which robot is getting the info
-        name = data.header.frame_id.strip("/").removesuffix("odom").strip("/")
-        print(name)
-        self.poses[name] = data.pose 
-
-        self.map_sub = rospy.Subscriber("map", OccupancyGrid, self.callback_map)
-        self.map: OccupancyGrid | None = None
+        robot_name = data.header.frame_id.strip("/").removesuffix("odom").strip("/")
+        self.poses[robot_name] = data.pose
 
     def callback_map(self, msg: OccupancyGrid):
         self.map = msg
