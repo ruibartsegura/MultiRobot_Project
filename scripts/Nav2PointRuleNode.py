@@ -1,12 +1,42 @@
 #!/usr/bin/env python3
 
 import rospy
+from RuleNode import RuleNode
 
-class Nav2PointRuleNode:
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Vector3
+from reynolds_rules.msg import VectorArray
+
+
+class Nav2PointRuleNode(RuleNode):
     def __init__(self):
-        pass
+        super().__init__("nav2point", 10)
+
+        self.point = Point()
+        self.point.x = rospy.get_param("~point_x", 0)
+        self.point.y = rospy.get_param("~point_y", 0)
+
+    # Return vector from point 1 to 2 with adecuate multiplier
+    def calc_vector(self, point1, point2):
+        vector = Vector3()
+
+        vector.x = self.multiplier * (point2.x - point1.x)
+        vector.y = self.multiplier * (point2.y - point1.y)
+
+        return vector
+
+    # Make and publish array of velocity vector to given point
+    def control_cycle(self, _):
+        nav2point_vectors = VectorArray()
+
+        for robot in self.robots:
+            nav2point_vector = self.calc_vector(robot.pose.pose.position, self.point)
+            nav2point_vectors.vectors.append(nav2point_vector)
+
+        self.pub.publish(nav2point_vectors)
+
 
 if __name__ == "__main__":
-    rospy.init_node("nav_2_point")
+    rospy.init_node("nav2point")
     node = Nav2PointRuleNode()
     rospy.spin()

@@ -11,7 +11,7 @@ from reynolds_rules.msg import VectorArray
 # Implements cohesion algorithm to the swarm
 class CohesionRuleNode(RuleNode):
     def __init__(self):
-        super().__init__("cohesion", 10)
+        super().__init__("cohesion", 20)
 
     # Returns average position between all robots positions
     def calc_average_pos(self):
