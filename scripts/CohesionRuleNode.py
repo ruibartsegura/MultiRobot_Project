@@ -18,8 +18,8 @@ class CohesionRuleNode(RuleNode):
         average_pos = Point()
 
         for robot in self.robots:
-            average_pos.x += robot.pose.poistion.x
-            average_pos.y += robot.pose.poistion.y
+            average_pos.x += robot.pose.pose.position.x
+            average_pos.y += robot.pose.pose.position.y
 
         average_pos.x = average_pos.x / self.n_robots
         average_pos.y = average_pos.y / self.n_robots
@@ -41,8 +41,8 @@ class CohesionRuleNode(RuleNode):
         cohesion_vectors = VectorArray()
 
         for robot in self.robots:
-            cohesion_vector = self.calc_vector(robot.pose.position, cohesion_pos)
-            cohesion_vectors.append(cohesion_vector)
+            cohesion_vector = self.calc_vector(robot.pose.pose.position, cohesion_pos)
+            cohesion_vectors.vectors.append(cohesion_vector)
 
         self.pub.publish(cohesion_vectors)
 

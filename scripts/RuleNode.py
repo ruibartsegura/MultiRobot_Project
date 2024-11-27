@@ -23,6 +23,8 @@ class RuleNode:
             topic = "/robot_" + str(i) + "/odom"
             rospy.Subscriber(topic, Odometry, self.robot_callback)
 
+            self.robots.append(Odometry())
+
     # Saves and updates list with odom of all robots
     def robot_callback(self, data: Odometry):
         begin = data.header.frame_id.find("/robot_") + 7
