@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
+import itertools
 import numpy as np
 
 from RuleNode import RuleNode
@@ -12,13 +13,26 @@ from typing import List, Tuple
 
 Position2D = Tuple[float, float]
 
+ANGULAR_STEPSIZE = np.deg2rad(2)
+
 
 class ObstacleAvoidanceNode(RuleNode):
     def __init__(self):
         super().__init__("obstacle_avoidance", 10)
 
+        # maximum range of perception
         self.view_range = rospy.get_param("~view_range", 0.5)
-        self.view_angle = rospy.get_param("~view_angle", 90)
+        # view_angle [degrees]: angular range of perception (half-width of the perception cone)
+        self.view_angle = rospy.get_param("~view_angle", 60)
+        # view_split [degrees]: angle that splits the perception cone on each side
+        self.view_split = rospy.get_param("~view_split", 0)
+        # example: view_angle:=60 view_split:=15
+        #   -> angular ranges [-75:-15] and [15:75] are observed
+
+        print("Starting the ObstacleAvoidance node.")
+        print(f"view_range: {self.view_range}")
+        print(f"view_angle: {self.view_angle : >3} deg")
+        print(f"view_split: {self.view_split : >3} deg")
 
         self.map: OccupancyGrid | None = None
         rospy.Subscriber("map", OccupancyGrid, self.callback_map)
@@ -56,9 +70,6 @@ class ObstacleAvoidanceNode(RuleNode):
             if distance != 0:
                 v += opposite_vector / distance
 
-        # normalize
-        v = v / np.linalg.norm(v)
-
         v3 = Vector3()
         v3.x = v[0]
         v3.y = v[1]
@@ -77,18 +88,22 @@ class ObstacleAvoidanceNode(RuleNode):
         robot_q = robot_pose.orientation
 
         robot_yaw = 2 * np.arctan2(robot_q.z, robot_q.w)
-        # TODO: look left and right
-        # left = range(...); right = range(...)
-        # for i in itertools.chain(left, right)
 
-        angular_step_size = np.deg2rad(2)
-        n_angular = int(np.deg2rad(self.view_angle) / angular_step_size)
+        # look left and right
+        min_angle = np.deg2rad(self.view_split)
+        max_angle = np.deg2rad(self.view_split + self.view_angle)
+        s = ANGULAR_STEPSIZE
+        angular_range = itertools.chain(
+            range(int(-max_angle / s), int(-min_angle / s)),  # left
+            range(int(min_angle / s), int(max_angle / s)),  # right
+        )
+
         radial_step_size = self.map.info.resolution
         n_radial = int(self.view_range / radial_step_size)
 
         obstacles = []
-        for a in range(-n_angular, n_angular + 1):
-            alpha = robot_yaw + a * angular_step_size
+        for a in angular_range:
+            alpha = robot_yaw + a * ANGULAR_STEPSIZE
             cos_alpha = np.cos(alpha)
             sin_alpha = np.sin(alpha)
             for r in range(1, n_radial):
