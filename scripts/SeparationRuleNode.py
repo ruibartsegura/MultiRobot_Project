@@ -10,7 +10,8 @@ from geometry_msgs.msg import Point
 
 class SeparationRuleNode(RuleNode):
     def __init__(self):
-        super().__init__("separation", 100)
+        super().__init__("separation", 10)
+        #rospy.sleep(1)
 
     
     def get_distance(self, pos1, pos2):
