@@ -4,7 +4,7 @@ import tf2_ros
 import math
 
 from RuleNode import RuleNode
-from reynolds_rules.msg import ArrayVectors # Import the custom message
+from reynolds_rules.msg import VectorArray # Import the custom message
 from geometry_msgs.msg import Point
 
 
@@ -22,7 +22,7 @@ class SeparationRuleNode(RuleNode):
     def calc_vector(self, position, num):
         repulsive_vector = Point()
         # k is the cte of force
-        k = 0.1
+        k = 0.01
 
         for i in range(self.n_robots):            
             # Avoid calculating the robotr's own vector
@@ -31,7 +31,7 @@ class SeparationRuleNode(RuleNode):
                 dist = self.get_distance(position, self.robots[i].pose.pose.position)
 
                 # Check if the distance is in the radious
-                if dist > 0.0 and dist < 0.2:
+                if dist > 0.0 and dist < 0.3:
                     #Get the x, y coords of the vector
                     x = position.x - self.robots[i].pose.pose.position.x
                     y = position.y - self.robots[i].pose.pose.position.y
@@ -54,7 +54,7 @@ class SeparationRuleNode(RuleNode):
 
     
     def control_cycle(self, _):
-        msg = ArrayVectors()
+        msg = VectorArray()
         separation_vectors = []
         
         for i in range(self.n_robots):

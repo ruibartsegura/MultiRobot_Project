@@ -6,26 +6,29 @@ import tf2_ros
 from RuleNode import RuleNode
 from geometry_msgs.msg import Twist, Vector3
 from nav_msgs.msg import OccupancyGrid, Odometry
-from reynolds_rules.msg import ArrayVectors # Import the custom message
+from reynolds_rules.msg import VectorArray # Import the custom message
 
 
 class ReynoldsRulesNode(RuleNode):
     def __init__(self):
-        super().__init__("reynold_rule", 100)
-        
-        # Subscribers to the rules topics
-        rospy.Subscriber("/separation_vectors", ArrayVectors, self.separation_callback)
-        #rospy.Subscriber("/name_vectors", ArrayVectors, self.name_callback)
-        #rospy.Subscriber("/name_vectors", ArrayVectors, self.name_callback)
-        #rospy.Subscriber("/name_vectors", ArrayVectors, self.name_callback)
-        #rospy.Subscriber("/name_vectors", ArrayVectors, self.name_callback)
+        super().__init__("reynold_rule", 10)
 
         # Variables to store the value of the publishers
-        self.separation_vectors = ArrayVectors(vectors=[Vector3() for _ in range(10)])
-        # self.name_vectors = ArrayVectors()
-        # self.name_vectors = ArrayVectors()
-        # self.name_vectors = ArrayVectors()
-        # self.name_vectors = ArrayVectors()
+        self.separation_vectors = VectorArray(vectors=[Vector3() for _ in range(10)])
+        self.cohesion_vectors = VectorArray(vectors=[Vector3() for _ in range(10)])
+        self.nav2point_vectors = VectorArray(vectors=[Vector3() for _ in range(10)])
+        self.obstacle_avoidance_vectors = VectorArray(vectors=[Vector3() for _ in range(10)])
+        # self.cohesion_vectors = VectorArray(vectors=[Vector3() for _ in range(10)])
+   
+        
+        # Subscribers to the rules topics
+        rospy.Subscriber("/separation_vectors", VectorArray, self.separation_callback)
+        rospy.Subscriber("/cohesion_vectors", VectorArray, self.cohesion_callback)
+        rospy.Subscriber("/nav2point_vectors", VectorArray, self.nav2point_callback)
+        rospy.Subscriber("/obstacle_avoidance_vectors", VectorArray, self.obstacle_avoidance_callback)
+        #rospy.Subscriber("/name_vectors", VectorArray, self.name_callback)
+
+        
 
         # Make a tuple with the correct namespace of the robots
         # I use a tuple to avoid having problems later if by mistake the list is changed
@@ -50,14 +53,14 @@ class ReynoldsRulesNode(RuleNode):
     def separation_callback(self, data):
         self.separation_vectors = data
 
-    # def name_callback(self, data):
-    #     self.name_vectors = data
+    def cohesion_callback(self, data):
+        self.cohesion_vectors = data
 
-    # def name_callback(self, data):
-    #     self.name_vectors = data
+    def nav2point_callback(self, data):
+        self.nav2point_vectors = data
 
-    # def name_callback(self, data):
-    #     self.name_vectors = data
+    def obstacle_avoidance_callback(self, data):
+        self.obstacle_avoidance_vectors = data
 
     # def name_callback(self, data):
     #     self.name_vectors = data
@@ -79,12 +82,12 @@ class ReynoldsRulesNode(RuleNode):
             y_sep = self.separation_vectors.vectors[i].y
             x_ali = 0.0  #self.separation_vectors.vectors[i].x
             y_ali = 0.0  #self.separation_vectors.vectors[i].y
-            x_cohe = 0.0 #self.separation_vectors.vectors[i].x
-            y_cohe = 0.0 #self.separation_vectors.vectors[i].y
-            x_nav = 0.0  #self.separation_vectors.vectors[i].x
-            y_nav = 0.0  #self.separation_vectors.vectors[i].y
-            x_obst = 0.0 #self.separation_vectors.vectors[i].x
-            y_obst = 0.0 #self.separation_vectors.vectors[i].y
+            x_cohe = self.cohesion_vectors.vectors[i].x
+            y_cohe = self.cohesion_vectors.vectors[i].y
+            x_nav = self.nav2point_vectors.vectors[i].x
+            y_nav = self.nav2point_vectors.vectors[i].y
+            x_obst = self.obstacle_avoidance_vectors.vectors[i].x
+            y_obst = self.obstacle_avoidance_vectors.vectors[i].y
 
             vel = Twist()
             vel.linear.x = x_sep + x_ali + x_cohe + x_nav + x_obst

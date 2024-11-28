@@ -13,11 +13,12 @@ class RuleNode:
 
         self.n_robots = rospy.get_param("~number_robots", 10)
         self.multiplier = rospy.get_param("~" + name + "_multiplier", 1)
+        print(f"Multi = {self.multiplier}")
 
         # Set common atributes of rules (Robots odom list, timer, publisher)
         self.robots = []
 
-        rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)
+        
         self.pub = rospy.Publisher("/" + name + "_vectors", VectorArray, queue_size=1)
 
         # Creates a suscriber for each robot odometry,
@@ -27,6 +28,7 @@ class RuleNode:
             rospy.Subscriber(topic, Odometry, self.robot_callback)
 
             self.robots.append(Odometry())
+        rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)
 
     # Saves and updates list with odom of all robots
     def robot_callback(self, data: Odometry):

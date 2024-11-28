@@ -6,7 +6,7 @@ import numpy as np
 from RuleNode import RuleNode
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Vector3
-from reynolds_rules.msg import ArrayVectors
+from reynolds_rules.msg import VectorArray
 from typing import List, Tuple
 
 
@@ -38,7 +38,7 @@ class ObstacleAvoidanceNode(RuleNode):
     def control_cycle(self, _):
         obstacle_avoidance_vectors = self.obstacle_avoidance_rule()
 
-        data = ArrayVectors()
+        data = VectorArray()
         data.vectors = [to_vector3(v) for v in obstacle_avoidance_vectors]
         self.pub.publish(data)
 
