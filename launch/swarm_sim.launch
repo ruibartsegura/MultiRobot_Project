@@ -1,7 +1,9 @@
 <launch>
-
   <!-- Global param for all rules and nodes -->
   <param name="number_robots" value="15" />
+
+  <!-- stage -->
+  <node pkg="sphero_stage" type="start.py" name="sphero_stage" required="true"/>
 
   <!-- Principal Node. Head of the system -->
   <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" />
@@ -32,4 +34,10 @@
     <remap from="x" to="y" />
   </node> -->
 
+  <!-- stub for the map server -->
+  <node pkg="reynolds_rules" type="MapStubNode.py" name="map" launch-prefix="bash -c 'sleep 3; $0 $@'">
+    <rosparam>
+      map_file : "hard_maze_10x10.json"
+    </rosparam>
+  </node>
 </launch>
