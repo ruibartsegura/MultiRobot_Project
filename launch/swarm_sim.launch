@@ -29,10 +29,7 @@
     <remap from="x" to="y" />
   </node>
 
-  <!-- <node pkg="reynolds_rules" type="AllingmentRuleNode.py" name="allingment_rule">
-    <param name="allingnment_multiplier" value="1" />
-    <remap from="x" to="y" />
-  </node> -->
+  <node pkg="reynolds_rules" type="AlignmentRuleNode.py" name="alignment_rule"/>
 
   <!-- stub for the map server -->
   <node pkg="reynolds_rules" type="MapStubNode.py" name="map" launch-prefix="bash -c 'sleep 3; $0 $@'">
