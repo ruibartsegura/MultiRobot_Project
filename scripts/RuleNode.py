@@ -9,12 +9,17 @@ from reynolds_rules.msg import VectorArray
 # Parent class os rules nodes classes
 class RuleNode:
     def __init__(self, name, rate):
-        print("Activating" + name + "_rule node...")
+
         self.n_robots = rospy.get_param("~number_robots", 10)
+
+        print("Starting the {name} node.")
+        print(f"number_robots: {self.n_robots}")
 
         # Set common atributes of rules (Robots odom list, timer, publisher)
         self.robots = []
+
         rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)
+
         self.pub = rospy.Publisher("/" + name + "_vectors", VectorArray, queue_size=1)
 
         # Creates a suscriber for each robot odometry,

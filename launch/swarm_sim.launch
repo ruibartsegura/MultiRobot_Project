@@ -12,30 +12,23 @@
       weight_alignment: 1.0
       weight_cohesion: 0.25
       weight_nav2point: 0.5
-      weight_obstacle_avoidance: 1.0
+      weight_obstacle_avoidance: 2.0
     </rosparam>
   </node>
 
   <!-- Now run every other node (rule) with neccessary params or remaps -->
-  <node pkg="reynolds_rules" type="SeparationRuleNode.py" name="separation_rule">
-    separation_range: 0.5
-  </node>
+  <node pkg="reynolds_rules" type="SeparationRuleNode.py" name="separation_rule"/>
   <node pkg="reynolds_rules" type="AlignmentRuleNode.py" name="alignment_rule"/>
-  <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule">
-    cohesion_range: 0.5
-  </node>
+  <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule"/>
 
   <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule">
-    <param name="nav2point_multiplier" value="1" />
-    <remap from="x" to="y" />
+    <rosparam>
+        point_x : 4
+        point_y : -0.5
+    </rosparam>
   </node>
 
-  <node pkg="reynolds_rules" type="SeparationRuleNode.py" name="separation_rule">
-    <param name="separation_multiplier" value="0.5" />
-    <remap from="x" to="y" />
-  </node>
-
-  <node pkg="reynolds_rules" type="AlignmentRuleNode.py" name="alignment_rule"/>
+  <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule"/>
 
   <!-- stub for the map server -->
   <node pkg="reynolds_rules" type="MapStubNode.py" name="map" launch-prefix="bash -c 'sleep 3; $0 $@'">

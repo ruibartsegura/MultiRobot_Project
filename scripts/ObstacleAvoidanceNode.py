@@ -29,7 +29,6 @@ class ObstacleAvoidanceNode(RuleNode):
         # example: view_angle:=60 view_split:=15
         #   -> angular ranges [-75:-15] and [15:75] are observed
 
-        print("Starting the ObstacleAvoidance node.")
         print(f"view_range: {self.view_range}")
         print(f"view_angle: {self.view_angle : >3} deg")
         print(f"view_split: {self.view_split : >3} deg")
