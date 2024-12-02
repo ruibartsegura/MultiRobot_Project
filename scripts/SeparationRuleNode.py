@@ -11,7 +11,8 @@ from geometry_msgs.msg import Point
 class SeparationRuleNode(RuleNode):
     def __init__(self):
         super().__init__("separation", 10)
-        #rospy.sleep(1)
+        
+        self.separation_range = rospy.get_param("~separation_range", 0.3)
 
     
     def get_distance(self, pos1, pos2):
@@ -31,7 +32,7 @@ class SeparationRuleNode(RuleNode):
                 dist = self.get_distance(position, self.robots[i].pose.pose.position)
 
                 # Check if the distance is in the radious
-                if dist > 0.0 and dist < 0.3:
+                if dist > 0.0 and dist < self.separation_range:
                     #Get the x, y coords of the vector
                     x = position.x - self.robots[i].pose.pose.position.x
                     y = position.y - self.robots[i].pose.pose.position.y

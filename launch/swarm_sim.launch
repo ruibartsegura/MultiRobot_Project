@@ -6,17 +6,23 @@
   <node pkg="sphero_stage" type="start.py" name="sphero_stage" required="true"/>
 
   <!-- Principal Node. Head of the system -->
-  <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" />
-
-  <!-- Now run every other node (rule) with neccessary params or remaps -->
-  <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule">
-    <param name="cohesion_multiplier" value="0.25" />
-    <remap from="x" to="y" />
+  <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen">
+    <rosparam>
+      weight_separation: 0.5
+      weight_alignment: 1.0
+      weight_cohesion: 0.25
+      weight_nav2point: 0.5
+      weight_obstacle_avoidance: 1.0
+    </rosparam>
   </node>
 
-  <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule">
-    <param name="obstacle_avoidance_multiplier" value="2" />
-    <remap from="x" to="y" />
+  <!-- Now run every other node (rule) with neccessary params or remaps -->
+  <node pkg="reynolds_rules" type="SeparationRuleNode.py" name="separation_rule">
+    separation_range: 0.5
+  </node>
+  <node pkg="reynolds_rules" type="AlignmentRuleNode.py" name="alignment_rule"/>
+  <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule">
+    cohesion_range: 0.5
   </node>
 
   <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule">
