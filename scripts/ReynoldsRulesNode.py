@@ -2,12 +2,11 @@
 
 import rospy
 
-from RuleNode import RuleNode
 from geometry_msgs.msg import Twist, Vector3
 from reynolds_rules.msg import VectorArray  # Import the custom message
 
 
-class ReynoldsRulesNode(RuleNode):
+class ReynoldsRulesNode():
     def __init__(self):
         self.n_robots = rospy.get_param("~number_robots", 10)
 
@@ -58,6 +57,8 @@ class ReynoldsRulesNode(RuleNode):
             topic = "/" + name + "/cmd_vel"
             self.publishers[name] = rospy.Publisher(topic, Twist, queue_size=1)
 
+        rospy.Timer(rospy.Duration(1 / 20), self.control_cycle)
+
     # Callback for each rule. Save vector list in class atribute
     def separation_callback(self, data):
         self.separation_vectors = data.vectors
@@ -74,7 +75,7 @@ class ReynoldsRulesNode(RuleNode):
     def alignment_callback(self, data):
         self.alignment_vectors = data.vectors
 
-    #
+    # Summ vectors of each element of the swarm and publish them to its vel topic
     def control_cycle(self, _):
         for i in range(self.n_robots):
             vel = Twist()
@@ -95,7 +96,7 @@ class ReynoldsRulesNode(RuleNode):
                 + self.obstacle_avoidance_weight * self.obstacle_avoidance_vectors[i].y
             )
 
-            # print(f"{self.robot_names[i]}: x {vel.linear.x}, y {vel.linear.y}")
+            # print(f"{self.publishers[self.robot_names[i]].resolved_name}: x {vel.linear.x}, y {vel.linear.y}")
             self.publishers[self.robot_names[i]].publish(vel)
 
 
