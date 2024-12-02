@@ -12,7 +12,7 @@ class RuleNode:
 
         self.n_robots = rospy.get_param("~number_robots", 10)
 
-        print("Starting the {name} node.")
+        print(f"Starting the {name} node.")
         print(f"number_robots: {self.n_robots}")
 
         # Set common atributes of rules (Robots odom list, timer, publisher)
