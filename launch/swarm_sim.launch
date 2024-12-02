@@ -1,1 +1,35 @@
-<!--  -->
+<launch>
+
+  <!-- Global param for all rules and nodes -->
+  <param name="number_robots" value="15" />
+
+  <!-- Principal Node. Head of the system -->
+  <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" />
+
+  <!-- Now run every other node (rule) with neccessary params or remaps -->
+  <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule">
+    <param name="cohesion_multiplier" value="0.25" />
+    <remap from="x" to="y" />
+  </node>
+
+  <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule">
+    <param name="obstacle_avoidance_multiplier" value="2" />
+    <remap from="x" to="y" />
+  </node>
+
+  <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule">
+    <param name="nav2point_multiplier" value="1" />
+    <remap from="x" to="y" />
+  </node>
+
+  <node pkg="reynolds_rules" type="SeparationRuleNode.py" name="separation_rule">
+    <param name="separation_multiplier" value="0.5" />
+    <remap from="x" to="y" />
+  </node>
+
+  <!-- <node pkg="reynolds_rules" type="AllingmentRuleNode.py" name="allingment_rule">
+    <param name="allingnment_multiplier" value="1" />
+    <remap from="x" to="y" />
+  </node> -->
+
+</launch>
