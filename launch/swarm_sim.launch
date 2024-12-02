@@ -20,6 +20,7 @@
   <node pkg="reynolds_rules" type="SeparationRuleNode.py" name="separation_rule"/>
   <node pkg="reynolds_rules" type="AlignmentRuleNode.py" name="alignment_rule"/>
   <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule"/>
+  <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule"/>
 
   <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule">
     <rosparam>
@@ -27,8 +28,6 @@
         point_y : -0.5
     </rosparam>
   </node>
-
-  <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule"/>
 
   <!-- stub for the map server -->
   <node pkg="reynolds_rules" type="MapStubNode.py" name="map" launch-prefix="bash -c 'sleep 3; $0 $@'">

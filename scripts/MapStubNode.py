@@ -54,18 +54,12 @@ class MapStubNode:
             "origin_y": self.map.info.origin.position.y,
             "data": self.map.data,
         }
+
         json_object = json.dumps(data)
         with open(self.map_file, "w") as f:
             f.write(json_object)
-        print(f"Wrote to map file.")
 
-    # implement abstract method
-    def control_cycle(self, _):
-        obstacle_avoidance_vectors = self.obstacle_avoidance_rule()
-
-        data = VectorArray()
-        data.vectors = [to_vector3(v) for v in obstacle_avoidance_vectors]
-        self.pub.publish(data)
+        print("Wrote to map file.")
 
 
 if __name__ == "__main__":
