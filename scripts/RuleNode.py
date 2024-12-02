@@ -11,10 +11,13 @@ class RuleNode:
     def __init__(self, name, rate):
         print("Activating" + name + "_rule node...")
 
+        # Get global and specific params
         self.n_robots = rospy.get_param("~number_robots", 10)
         self.multiplier = rospy.get_param("~" + name + "_multiplier", 1)
 
-        # Set common atributes of rules (Robots odom list, timer, publisher)
+        # Set common atributes of rules (Robots odom list, timer, publisher, vectors list)
+        self.rule_vectors = VectorArray()
+        self.rule_vectors.id = name
         self.robots = []
 
         rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)

@@ -5,7 +5,6 @@ from RuleNode import RuleNode
 
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Vector3
-from reynolds_rules.msg import VectorArray
 
 
 class Nav2PointRuleNode(RuleNode):
@@ -27,13 +26,11 @@ class Nav2PointRuleNode(RuleNode):
 
     # Make and publish array of velocity vector to given point
     def control_cycle(self, _):
-        nav2point_vectors = VectorArray()
-
         for robot in self.robots:
             nav2point_vector = self.calc_vector(robot.pose.pose.position, self.point)
-            nav2point_vectors.vectors.append(nav2point_vector)
+            self.rule_vectors.vectors.append(nav2point_vector)
 
-        self.pub.publish(nav2point_vectors)
+        self.pub.publish(self.rule_vectors)
 
 
 if __name__ == "__main__":
