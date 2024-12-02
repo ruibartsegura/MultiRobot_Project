@@ -13,7 +13,12 @@ class MapStubNode:
         self.map_file = rospy.get_param("~map_file", "map.json")
 
         self.map: OccupancyGrid | None = None
-        self.pub = rospy.Publisher("map", OccupancyGrid, queue_size=1)
+        self.pub = rospy.Publisher(
+            "map",
+            OccupancyGrid,
+            queue_size=1,
+            subscriber_listener=MapSubscribeListener(self),
+        )
 
         package = rospkg.RosPack().get_path("reynolds_rules")
         self.map_file = f"{package}/{self.map_file}"
@@ -42,8 +47,7 @@ class MapStubNode:
             self.map.info.origin.position.x = json_object["origin_x"]
             self.map.info.origin.position.y = json_object["origin_y"]
             self.map.data = json_object["data"]
-            self.pub.publish(self.map)
-        print(f"Read and published map to {self.pub.resolved_name}.")
+        print("Read map from file.")
 
     def write_map_file(self):
         data = {
@@ -60,6 +64,20 @@ class MapStubNode:
             f.write(json_object)
 
         print("Wrote to map file.")
+
+
+class MapSubscribeListener(rospy.SubscribeListener):
+    def __init__(self, node):
+        super().__init__()
+        self.node = node
+
+    def peer_subscribe(self, _topic_name, _topic_publish, peer_publish):
+        print(f"Published map to {self.node.pub.resolved_name}.")
+        if self.node.map:
+            peer_publish(self.node.map)
+
+    def peer_unsubscribe(self, _):
+        print("unsubscribed")
 
 
 if __name__ == "__main__":

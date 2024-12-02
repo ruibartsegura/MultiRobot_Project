@@ -30,7 +30,7 @@
   </node>
 
   <!-- stub for the map server -->
-  <node pkg="reynolds_rules" type="MapStubNode.py" name="map" launch-prefix="bash -c 'sleep 3; $0 $@'">
+  <node pkg="reynolds_rules" type="MapStubNode.py" name="map">
     <rosparam>
       map_file : "hard_maze_10x10.json"
     </rosparam>
