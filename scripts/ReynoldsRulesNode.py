@@ -36,17 +36,16 @@ class ReynoldsRulesNode:
         self.cohesion_weight = rospy.get_param("~cohesion_weight", 1.0)
         self.nav2point_weight = rospy.get_param("~nav2point_weight", 1.0)
         self.obstacle_avoidance_weight = rospy.get_param(
-            "~obstacle_avoidance_weight", 3.0
+            "~obstacle_avoidance_weight", 1.0
         )
 
-        # print("Starting the reynolds_rules node.")
-        # print(f"refresh_rate: {refresh_rate} Hz")
-        # print(f"separation_weight: {self.separation_weight: >.1f}")
-        # print(f"alignment_weight: {self.alignment_weight: >.1f}")
-        # print(f"cohesion_weight: {self.cohesion_weight: >.1f}")
-        # print(f"nav2point_weight: {self.nav2point_weight: >.1f}")
-        # print(f"obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
-        # print(f"threshold_priorities: {self.threshold_priorities: >.1f}")
+        print("Starting the reynolds_rules node.")
+        print(f"  separation_weight: {self.separation_weight: >.1f}")
+        print(f"  alignment_weight: {self.alignment_weight: >.1f}")
+        print(f"  cohesion_weight: {self.cohesion_weight: >.1f}")
+        print(f"  nav2point_weight: {self.nav2point_weight: >.1f}")
+        print(f"  obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
+        print(f"  threshold_priorities: {self.threshold_priorities: >.1f}")
 
         # Variables to store the value of the rule vectors
         self.separation_vectors = [Vector3() for _ in range(self.n_robots)]
