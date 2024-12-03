@@ -9,7 +9,7 @@
   <!-- Principal Node. Head of the system -->
   <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen">
     <rosparam>
-      separation_weight: 0.5
+      separation_weight: 0.8
       alignment_weight: 0.5
       nav2point_weight: 0.1
       cohesion_weight: 0.1
@@ -21,7 +21,7 @@
   <!-- Now run every other node (rule) with neccessary params or remaps -->
   <node pkg="reynolds_rules" type="SeparationRuleNode.py" name="separation_rule"/>
   <node pkg="reynolds_rules" type="AlignmentRuleNode.py" name="alignment_rule"/>
-  <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule"/>
+  <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule" output="screen"/>
   <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule"/>
 
   <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule">
