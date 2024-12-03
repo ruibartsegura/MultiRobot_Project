@@ -31,8 +31,8 @@ class Nav2PointRuleNode(RuleNode):
     # Make and publish array of velocity vector to given point
     def control_cycle(self, _):
         # Check if there is a new target point
-        self.point.x = rospy.get_param("~point_x", 0)
-        self.point.y = rospy.get_param("~point_y", 0)
+        self.point.x = rospy.get_param("~point_x", self.point.x)
+        self.point.y = rospy.get_param("~point_y", self.point.y)
         
         nav2point_vectors = VectorArray()
 
@@ -44,6 +44,6 @@ class Nav2PointRuleNode(RuleNode):
 
 
 if __name__ == "__main__":
-    rospy.init_node("nav2point")
+    rospy.init_node("nav2point_rule")
     node = Nav2PointRuleNode()
     rospy.spin()

@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 
 import rospy
-import tf2_ros
 import math
 
 from geometry_msgs.msg import Twist, Vector3
 from reynolds_rules.msg import VectorArray  # Import the custom message
 
 
-class ReynoldsRulesNode():
+def calc_length(weigth, vector):
+    x = weigth * vector.x
+    y = weigth * vector.y
+    return math.sqrt(x * x + y * y)
+
+
+class ReynoldsRulesNode:
     def __init__(self):
-        refresh_rate = rospy.get_param("refresh_rate", 20)
-        self.n_robots = rospy.get_param("~number_robots", 10)
+        refresh_rate = rospy.get_param("/refresh_rate", 20)
+        self.n_robots = rospy.get_param("/number_robots", 10)
+
+        # Get threshold for priorities
+        self.threshold_priorities = rospy.get_param("~threshold_priorities", 1.0)
 
         # Get and print weigths for each rule
         self.separation_weight = rospy.get_param("~separation_weight", 1.0)
@@ -22,24 +30,21 @@ class ReynoldsRulesNode():
             "~obstacle_avoidance_weight", 3.0
         )
 
-        print(f"Starting the reynolds_rules node.")
-        print(f"refresh_rate: {refresh_rate} Hz")
-        print(f"separation_weight: {self.separation_weight: >.1f}")
-        print(f"alignment_weight: {self.alignment_weight: >.1f}")
-        print(f"cohesion_weight: {self.cohesion_weight: >.1f}")
-        print(f"nav2point_weight: {self.nav2point_weight: >.1f}")
-        print(f"obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
-
-        # Get threshold for priorities
-        self.threshold_priorities = rospy.get_param("~threshold_priorities", 1.0)
-        print(f"threshold_priorities: {self.threshold_priorities: >.1f}")
+        # print("Starting the reynolds_rules node.")
+        # print(f"refresh_rate: {refresh_rate} Hz")
+        # print(f"separation_weight: {self.separation_weight: >.1f}")
+        # print(f"alignment_weight: {self.alignment_weight: >.1f}")
+        # print(f"cohesion_weight: {self.cohesion_weight: >.1f}")
+        # print(f"nav2point_weight: {self.nav2point_weight: >.1f}")
+        # print(f"obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
+        # print(f"threshold_priorities: {self.threshold_priorities: >.1f}")
 
         # Variables to store the value of the rule vectors
-        self.separation_vectors = [Vector3() for _ in range(10)]
-        self.cohesion_vectors = [Vector3() for _ in range(10)]
-        self.nav2point_vectors = [Vector3() for _ in range(10)]
-        self.obstacle_avoidance_vectors = [Vector3() for _ in range(10)]
-        self.alignment_vectors = [Vector3() for _ in range(10)]
+        self.separation_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.cohesion_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.nav2point_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.obstacle_avoidance_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.alignment_vectors = [Vector3() for _ in range(self.n_robots)]
 
         # Subscribers to the rules topics
         rospy.Subscriber("/separation_vectors", VectorArray, self.separation_callback)
@@ -68,8 +73,6 @@ class ReynoldsRulesNode():
 
         rospy.Timer(rospy.Duration(1 / refresh_rate), self.control_cycle)
 
-        rospy.Timer(rospy.Duration(1 / 3), self.control_cycle)
-
     # Callback for each rule. Save vector list in class atribute
     def separation_callback(self, data):
         self.separation_vectors = data.vectors
@@ -86,11 +89,6 @@ class ReynoldsRulesNode():
     def alignment_callback(self, data):
         self.alignment_vectors = data.vectors
 
-    def calc_length(self, weigth, vector):
-        x = weigth * vector.x
-        y = weigth * vector.y
-        return math.sqrt(x * x + y * y)
-
     # Summ vectors of each element of the swarm and publish them to its vel topic
     def control_cycle(self, _):
         for i in range(self.n_robots):
@@ -98,38 +96,58 @@ class ReynoldsRulesNode():
             total_amount = 0
 
             # Check separation first to avoid collision between robots
-            total_amount += self.calc_length(self.separation_weight, self.separation_vectors[i])
-            if (total_amount <= self.threshold_priorities):
+            total_amount += calc_length(
+                self.separation_weight, self.separation_vectors[i]
+            )
+            if total_amount <= self.threshold_priorities:
                 vel.linear.x += self.separation_weight * self.separation_vectors[i].x
                 vel.linear.y += self.separation_weight * self.separation_vectors[i].y
 
             # Check avoid obstacle second to avoid collision with the enviroment
-            total_amount += self.calc_length(self.obstacle_avoidance_weight, self.obstacle_avoidance_vectors[i])
-            if (total_amount <= self.threshold_priorities):
-                vel.linear.x += self.obstacle_avoidance_weight * self.obstacle_avoidance_vectors[i].x
-                vel.linear.y += self.obstacle_avoidance_weight * self.obstacle_avoidance_vectors[i].y
-            
+            total_amount += calc_length(
+                self.obstacle_avoidance_weight, self.obstacle_avoidance_vectors[i]
+            )
+            if total_amount <= self.threshold_priorities:
+                vel.linear.x += (
+                    self.obstacle_avoidance_weight
+                    * self.obstacle_avoidance_vectors[i].x
+                )
+                vel.linear.y += (
+                    self.obstacle_avoidance_weight
+                    * self.obstacle_avoidance_vectors[i].y
+                )
+
             # Check cohesion third to keep the swarm together
-            total_amount += self.calc_length(self.cohesion_weight, self.cohesion_vectors[i])
-            if (total_amount <= self.threshold_priorities):
+            total_amount += calc_length(self.cohesion_weight, self.cohesion_vectors[i])
+            if total_amount <= self.threshold_priorities:
                 vel.linear.x += self.cohesion_weight * self.cohesion_vectors[i].x
                 vel.linear.y += self.cohesion_weight * self.cohesion_vectors[i].y
-            
+
             # Check alignment forth to make all the swarm move together
-            total_amount += self.calc_length(self.alignment_weight, self.alignment_vectors[i])
-            if (total_amount <= self.threshold_priorities):
+            total_amount += calc_length(
+                self.alignment_weight, self.alignment_vectors[i]
+            )
+            if total_amount <= self.threshold_priorities:
                 vel.linear.x += self.alignment_weight * self.alignment_vectors[i].x
                 vel.linear.y += self.alignment_weight * self.alignment_vectors[i].y
-            
+
             # Check nav to a point fith to go to the target
-            total_amount += self.calc_length(self.nav2point_weight, self.nav2point_vectors[i])
-            if (total_amount <= self.threshold_priorities):
+            total_amount += calc_length(
+                self.nav2point_weight, self.nav2point_vectors[i]
+            )
+            if total_amount <= self.threshold_priorities:
                 vel.linear.x += self.nav2point_weight * self.nav2point_vectors[i].x
                 vel.linear.y += self.nav2point_weight * self.nav2point_vectors[i].y
             else:
-                scale = total_amount - self.calc_length(self.nav2point_weight, self.nav2point_vectors[i])
-                vel.linear.x += scale * self.nav2point_weight * self.nav2point_vectors[i].x
-                vel.linear.y += scale * self.nav2point_weight * self.nav2point_vectors[i].y
+                scale = total_amount - calc_length(
+                    self.nav2point_weight, self.nav2point_vectors[i]
+                )
+                vel.linear.x += (
+                    scale * self.nav2point_weight * self.nav2point_vectors[i].x
+                )
+                vel.linear.y += (
+                    scale * self.nav2point_weight * self.nav2point_vectors[i].y
+                )
 
             self.publishers[self.robot_names[i]].publish(vel)
 
