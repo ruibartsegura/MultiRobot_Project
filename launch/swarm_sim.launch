@@ -8,11 +8,11 @@
   <!-- Principal Node. Head of the system -->
   <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen">
     <rosparam>
-      weight_separation: 0.5
-      weight_alignment: 1.0
-      weight_cohesion: 0.25
-      weight_nav2point: 0.5
-      weight_obstacle_avoidance: 2.0
+      separation_weight: 0.5
+      alignment_weight: 0.3
+      nav2point_weight: 0.2
+      cohesion_weight: 0.25
+      obstacle_avoidance_weight: 2.0
     </rosparam>
   </node>
 
