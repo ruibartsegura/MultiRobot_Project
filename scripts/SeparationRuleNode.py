@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import rospy
-import tf2_ros
 import math
 
 from RuleNode import RuleNode
