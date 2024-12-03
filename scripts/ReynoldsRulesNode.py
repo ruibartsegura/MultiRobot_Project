@@ -25,13 +25,13 @@ class ReynoldsRulesNode():
         print(f"alignment_weight: {self.alignment_weight: >.1f}")
         print(f"cohesion_weight: {self.cohesion_weight: >.1f}")
         print(f"nav2point_weight: {self.nav2point_weight: >.1f}")
-        # print(f"obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
+        print(f"obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
 
         # Variables to store the value of the rule vectors
         self.separation_vectors = [Vector3() for _ in range(10)]
         self.cohesion_vectors = [Vector3() for _ in range(10)]
         self.nav2point_vectors = [Vector3() for _ in range(10)]
-        # self.obstacle_avoidance_vectors = [Vector3() for _ in range(10)]
+        self.obstacle_avoidance_vectors = [Vector3() for _ in range(10)]
         self.alignment_vectors = [Vector3() for _ in range(10)]
 
         # Subscribers to the rules topics
@@ -39,9 +39,9 @@ class ReynoldsRulesNode():
         rospy.Subscriber("/cohesion_vectors", VectorArray, self.cohesion_callback)
         rospy.Subscriber("/nav2point_vectors", VectorArray, self.nav2point_callback)
         rospy.Subscriber("/alignment_vectors", VectorArray, self.alignment_callback)
-        # rospy.Subscriber(
-        #     "/obstacle_avoidance_vectors", VectorArray, self.obstacle_avoidance_callback
-        # )
+        rospy.Subscriber(
+            "/obstacle_avoidance_vectors", VectorArray, self.obstacle_avoidance_callback
+        )
 
         # Make a tuple with the correct namespace of the robots
         # I use a tuple to avoid having problems later if by mistake the list is changed
@@ -73,8 +73,8 @@ class ReynoldsRulesNode():
     def nav2point_callback(self, data):
         self.nav2point_vectors = data.vectors
 
-    # def obstacle_avoidance_callback(self, data):
-    #     self.obstacle_avoidance_vectors = data.vectors
+    def obstacle_avoidance_callback(self, data):
+        self.obstacle_avoidance_vectors = data.vectors
 
     def alignment_callback(self, data):
         self.alignment_vectors = data.vectors
@@ -92,42 +92,42 @@ class ReynoldsRulesNode():
 
             # Check separation first to avoid collision between robots
             total_amount += self.calc_length(self.separation_weight, self.separation_vectors[i])
-            print(f"1 {total_amount}")
+            print(f"Sep {total_amount}")
             if (total_amount <= 5):
                 vel.linear.x += self.separation_weight * self.separation_vectors[i].x
                 vel.linear.y += self.separation_weight * self.separation_vectors[i].y
 
             # Check avoid obstacle second to avoid collision with the enviroment
-            # total_amount += self.calc_length(self.obstacle_avoidance_weight, self.obstacle_vectors[i])
-            # if (total_amount <= 5):
-            #     vel.linear.x += self.obstacle_avoidance_weight * self.obstacle_vectors[i].x
-            #     vel.linear.y += self.obstacle_avoidance_weight * self.obstacle_vectors[i].y
+            total_amount += self.calc_length(self.obstacle_avoidance_weight, self.obstacle_avoidance_vectors[i])
+            print(f"Obs {total_amount}")
+            if (total_amount <= 5):
+                vel.linear.x += self.obstacle_avoidance_weight * self.obstacle_avoidance_vectors[i].x
+                vel.linear.y += self.obstacle_avoidance_weight * self.obstacle_avoidance_vectors[i].y
             
             # Check avoid obstacle second to avoid collision with the enviroment
             total_amount += self.calc_length(self.cohesion_weight, self.cohesion_vectors[i])
-            print(f"3 {total_amount}")
+            print(f"Cohe {total_amount}")
             if (total_amount <= 5):
                 vel.linear.x += self.cohesion_weight * self.cohesion_vectors[i].x
                 vel.linear.y += self.cohesion_weight * self.cohesion_vectors[i].y
             
             # Check avoid obstacle second to avoid collision with the enviroment
             total_amount += self.calc_length(self.alignment_weight, self.alignment_vectors[i])
-            print(f"4 {total_amount}")
+            print(f"Alig {total_amount}")
             if (total_amount <= 5):
                 vel.linear.x += self.alignment_weight * self.alignment_vectors[i].x
                 vel.linear.y += self.alignment_weight * self.alignment_vectors[i].y
             
             # Check avoid obstacle second to avoid collision with the enviroment
             total_amount += self.calc_length(self.nav2point_weight, self.nav2point_vectors[i])
-            print(f"5 {total_amount}")
+            print(f"Nav {total_amount}")
             if (total_amount <= 5):
                 vel.linear.x += self.nav2point_weight * self.nav2point_vectors[i].x
                 vel.linear.y += self.nav2point_weight * self.nav2point_vectors[i].y
-            # else:
-            #     scale = total_amount - length
-            #     vel.linear.x += self.nav2point_weight * self.nav2point_vectors[i].x
-            #     vel.linear.y += self.nav2point_weight * self.nav2point_vectors[i].y
-            # total_amount += length
+            else:
+                scale = total_amount - length
+                vel.linear.x += self.nav2point_weight * self.nav2point_vectors[i].x
+                vel.linear.y += self.nav2point_weight * self.nav2point_vectors[i].y
 
             self.publishers[self.robot_names[i]].publish(vel)
 

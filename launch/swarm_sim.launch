@@ -10,8 +10,8 @@
     <rosparam>
       separation_weight: 0.5
       alignment_weight: 0.3
-      nav2point_weight: 0.2
-      cohesion_weight: 0.25
+      nav2point_weight: 0.1
+      cohesion_weight: 0.1
       obstacle_avoidance_weight: 2.0
     </rosparam>
   </node>
