@@ -30,6 +30,10 @@ class Nav2PointRuleNode(RuleNode):
 
     # Make and publish array of velocity vector to given point
     def control_cycle(self, _):
+        # Check if there is a new target point
+        self.point.x = rospy.get_param("~point_x", 0)
+        self.point.y = rospy.get_param("~point_y", 0)
+        
         nav2point_vectors = VectorArray()
 
         for robot in self.robots:
