@@ -6,6 +6,12 @@ from RuleNode import RuleNode
 from geometry_msgs.msg import Vector3
 from reynolds_rules.msg import VectorArray
 
+# Return distance between two points
+def calc_distance(pos1, pos2):
+    x = pos1.x - pos2.x
+    y = pos1.y - pos2.y
+
+    return math.sqrt(x * x + y * y)
 
 # Implements alignment rule to the swarm
 class AlignmentRuleNode(RuleNode):
