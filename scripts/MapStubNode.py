@@ -10,6 +10,7 @@ from nav_msgs.msg import OccupancyGrid
 
 class MapStubNode:
     def __init__(self):
+        self.subscriber_count = 0
         self.map_file = rospy.get_param("~map_file", "map.json")
 
         self.map: OccupancyGrid | None = None
@@ -47,7 +48,10 @@ class MapStubNode:
             self.map.info.origin.position.x = json_object["origin_x"]
             self.map.info.origin.position.y = json_object["origin_y"]
             self.map.data = json_object["data"]
-        print("Read map from file.")
+
+        print(f"Read map from file ({self.subscriber_count} subscribers).")
+        if self.subscriber_count > 0:
+            self.pub.publish(self.map)
 
     def write_map_file(self):
         data = {
@@ -72,12 +76,13 @@ class MapSubscribeListener(rospy.SubscribeListener):
         self.node = node
 
     def peer_subscribe(self, _topic_name, _topic_publish, peer_publish):
-        print(f"Published map to {self.node.pub.resolved_name}.")
+        self.node.subscriber_count += 1
         if self.node.map:
             peer_publish(self.node.map)
+            print(f"New subscriber -> published map to {self.node.pub.resolved_name}.")
 
-    def peer_unsubscribe(self, _):
-        print("unsubscribed")
+    def peer_unsubscribe(self, subscriber_count):
+        self.node.subscriber_count = subscriber_count
 
 
 if __name__ == "__main__":
