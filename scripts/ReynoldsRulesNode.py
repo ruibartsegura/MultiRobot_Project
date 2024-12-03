@@ -12,6 +12,15 @@ def calc_length(weigth, vector):
     y = weigth * vector.y
     return math.sqrt(x * x + y * y)
 
+# Makes module of the vector the linear x velocity component
+# and the angle to where the vector point as angular velocity
+def vector2twist(vector):
+    twist = Twist()
+    twist.linear.x = calc_length(1, vector)
+    twist.angular.z = math.atan2(vector.y, vector.x)
+
+    return twist
+
 
 class ReynoldsRulesNode:
     def __init__(self):
@@ -92,7 +101,7 @@ class ReynoldsRulesNode:
     # Summ vectors of each element of the swarm and publish them to its vel topic
     def control_cycle(self, _):
         for i in range(self.n_robots):
-            vel = Twist()
+            vel_vector = Vector3()
             total_amount = 0
 
             # Check separation first to avoid collision between robots
@@ -100,19 +109,19 @@ class ReynoldsRulesNode:
                 self.separation_weight, self.separation_vectors[i]
             )
             if total_amount <= self.threshold_priorities:
-                vel.linear.x += self.separation_weight * self.separation_vectors[i].x
-                vel.linear.y += self.separation_weight * self.separation_vectors[i].y
+                vel_vector.x += self.separation_weight * self.separation_vectors[i].x
+                vel_vector.y += self.separation_weight * self.separation_vectors[i].y
 
             # Check avoid obstacle second to avoid collision with the enviroment
             total_amount += calc_length(
                 self.obstacle_avoidance_weight, self.obstacle_avoidance_vectors[i]
             )
             if total_amount <= self.threshold_priorities:
-                vel.linear.x += (
+                vel_vector.x += (
                     self.obstacle_avoidance_weight
                     * self.obstacle_avoidance_vectors[i].x
                 )
-                vel.linear.y += (
+                vel_vector.y += (
                     self.obstacle_avoidance_weight
                     * self.obstacle_avoidance_vectors[i].y
                 )
@@ -120,36 +129,37 @@ class ReynoldsRulesNode:
             # Check cohesion third to keep the swarm together
             total_amount += calc_length(self.cohesion_weight, self.cohesion_vectors[i])
             if total_amount <= self.threshold_priorities:
-                vel.linear.x += self.cohesion_weight * self.cohesion_vectors[i].x
-                vel.linear.y += self.cohesion_weight * self.cohesion_vectors[i].y
+                vel_vector.x += self.cohesion_weight * self.cohesion_vectors[i].x
+                vel_vector.y += self.cohesion_weight * self.cohesion_vectors[i].y
 
             # Check alignment forth to make all the swarm move together
             total_amount += calc_length(
                 self.alignment_weight, self.alignment_vectors[i]
             )
             if total_amount <= self.threshold_priorities:
-                vel.linear.x += self.alignment_weight * self.alignment_vectors[i].x
-                vel.linear.y += self.alignment_weight * self.alignment_vectors[i].y
+                vel_vector.x += self.alignment_weight * self.alignment_vectors[i].x
+                vel_vector.y += self.alignment_weight * self.alignment_vectors[i].y
 
             # Check nav to a point fith to go to the target
             total_amount += calc_length(
                 self.nav2point_weight, self.nav2point_vectors[i]
             )
             if total_amount <= self.threshold_priorities:
-                vel.linear.x += self.nav2point_weight * self.nav2point_vectors[i].x
-                vel.linear.y += self.nav2point_weight * self.nav2point_vectors[i].y
+                vel_vector.x += self.nav2point_weight * self.nav2point_vectors[i].x
+                vel_vector.y += self.nav2point_weight * self.nav2point_vectors[i].y
             else:
                 scale = total_amount - calc_length(
                     self.nav2point_weight, self.nav2point_vectors[i]
                 )
-                vel.linear.x += (
+                vel_vector.x += (
                     scale * self.nav2point_weight * self.nav2point_vectors[i].x
                 )
-                vel.linear.y += (
+                vel_vector.y += (
                     scale * self.nav2point_weight * self.nav2point_vectors[i].y
                 )
 
-            self.publishers[self.robot_names[i]].publish(vel)
+            vel_msg = vector2twist(vel_vector)
+            self.publishers[self.robot_names[i]].publish(vel_msg)
 
 
 if __name__ == "__main__":
