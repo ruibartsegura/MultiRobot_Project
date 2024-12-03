@@ -23,7 +23,7 @@ class MapStubNode:
 
         package = rospkg.RosPack().get_path("reynolds_rules")
         self.map_file = f"{package}/{self.map_file}"
-        print(f"map_file: {self.map_file}")
+        print(f"  map_file: {self.map_file}")
         self.read_map_file()
 
         rospy.Subscriber("src", OccupancyGrid, self.callback_map)

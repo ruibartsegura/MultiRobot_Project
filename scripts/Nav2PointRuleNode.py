@@ -16,8 +16,8 @@ class Nav2PointRuleNode(RuleNode):
         self.point.x = rospy.get_param("~point_x", 0)
         self.point.y = rospy.get_param("~point_y", 0)
 
-        print(f"point_x: {self.point.x}")
-        print(f"point_y: {self.point.y}")
+        print(f"  point_x: {self.point.x}")
+        print(f"  point_y: {self.point.y}")
 
     # Return vector from point 1 to 2
     def calc_vector(self, point1, point2):
