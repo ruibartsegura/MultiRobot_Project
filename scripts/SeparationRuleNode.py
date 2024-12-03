@@ -10,7 +10,7 @@ from geometry_msgs.msg import Point
 
 class SeparationRuleNode(RuleNode):
     def __init__(self):
-        super().__init__("separation", 10)
+        super().__init__("separation")
         
         self.separation_range = rospy.get_param("~separation_range", 0.3)
 

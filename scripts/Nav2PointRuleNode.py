@@ -10,7 +10,7 @@ from reynolds_rules.msg import VectorArray
 
 class Nav2PointRuleNode(RuleNode):
     def __init__(self):
-        super().__init__("nav2point", 10)
+        super().__init__("nav2point")
 
         self.point = Point()
         self.point.x = rospy.get_param("~point_x", 0)

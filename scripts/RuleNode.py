@@ -6,38 +6,33 @@ from nav_msgs.msg import Odometry
 from reynolds_rules.msg import VectorArray
 
 
-# Parent class os rules nodes classes
+# Parent class of rule node classes
 class RuleNode:
-    def __init__(self, name, rate):
-
+    def __init__(self, name):
         self.n_robots = rospy.get_param("~number_robots", 10)
+        refresh_rate = rospy.get_param("refresh_rate", 20)
 
-        print("Starting the {name} node.")
+        print(f"Starting the {name} node.")
         print(f"number_robots: {self.n_robots}")
+        print(f"refresh_rate: {refresh_rate}")
 
-        # Set common atributes of rules (Robots odom list, timer, publisher)
-        self.robots = []
+        self.robots = [Odometry() for _ in range(self.n_robots)]
 
-        rospy.Timer(rospy.Duration(1 / rate), self.control_cycle)
+        for i in range(self.n_robots):
+            rospy.Subscriber(f"/robot_{i}/odom", Odometry, self.robot_callback)
 
         self.pub = rospy.Publisher("/" + name + "_vectors", VectorArray, queue_size=1)
 
-        # Creates a suscriber for each robot odometry,
-        # but using the same callback
-        for i in range(self.n_robots):
-            topic = "/robot_" + str(i) + "/odom"
-            rospy.Subscriber(topic, Odometry, self.robot_callback)
+        rospy.Timer(rospy.Duration(1 / refresh_rate), self.control_cycle)
 
-            self.robots.append(Odometry())
-
-    # Saves and updates list with odom of all robots
     def robot_callback(self, data: Odometry):
-        begin = data.header.frame_id.find("/robot_") + 7
+        """Saves and updates list with odom of all robots."""
+        begin = data.header.frame_id.find("/robot_") + len("/robot_")
         end = data.header.frame_id.find("/odom")
 
         i = int(data.header.frame_id[begin:end])
         self.robots[i] = data
 
-    # Abstract, principal method.
     def control_cycle(self, _):
+        """Abstract, principal method."""
         pass

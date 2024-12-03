@@ -18,7 +18,7 @@ ANGULAR_STEPSIZE = np.deg2rad(2)
 
 class ObstacleAvoidanceNode(RuleNode):
     def __init__(self):
-        super().__init__("obstacle_avoidance", 10)
+        super().__init__("obstacle_avoidance")
 
         # maximum range of perception
         self.view_range = rospy.get_param("~view_range", 0.5)

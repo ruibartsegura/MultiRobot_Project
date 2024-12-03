@@ -10,7 +10,7 @@ from reynolds_rules.msg import VectorArray
 # Implements alignment rule to the swarm
 class AlignmentRuleNode(RuleNode):
     def __init__(self):
-        super().__init__("alignment", 20)
+        super().__init__("alignment")
 
     # Compute average velocity of all robots
     def calc_average_velocity(self):

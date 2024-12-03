@@ -8,6 +8,7 @@ from reynolds_rules.msg import VectorArray  # Import the custom message
 
 class ReynoldsRulesNode():
     def __init__(self):
+        refresh_rate = rospy.get_param("refresh_rate", 20)
         self.n_robots = rospy.get_param("~number_robots", 10)
 
         # Get and print weigths for each rule
@@ -19,6 +20,8 @@ class ReynoldsRulesNode():
             "~obstacle_avoidance_weight", 1.0
         )
 
+        print(f"Starting the reynolds_rules node.")
+        print(f"refresh_rate: {refresh_rate} Hz")
         print(f"separation_weight: {self.separation_weight: >.1f}")
         print(f"alignment_weight: {self.alignment_weight: >.1f}")
         print(f"cohesion_weight: {self.cohesion_weight: >.1f}")
@@ -57,7 +60,7 @@ class ReynoldsRulesNode():
             topic = "/" + name + "/cmd_vel"
             self.publishers[name] = rospy.Publisher(topic, Twist, queue_size=1)
 
-        rospy.Timer(rospy.Duration(1 / 20), self.control_cycle)
+        rospy.Timer(rospy.Duration(1 / refresh_rate), self.control_cycle)
 
     # Callback for each rule. Save vector list in class atribute
     def separation_callback(self, data):
