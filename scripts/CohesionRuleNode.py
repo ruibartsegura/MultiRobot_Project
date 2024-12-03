@@ -21,8 +21,8 @@ def calc_distance(pos1, pos2):
 # Implements cohesion algorithm to the swarm
 class CohesionRuleNode(RuleNode):
     def __init__(self):
-        super().__init__("cohesion")
         self.cohesion_range = rospy.get_param("~cohesion_range", 0.3)
+        super().__init__("cohesion")
 
     # Returns average position between all robots positions in the neighbor
     def calc_average_pos(self, positions):

@@ -18,9 +18,9 @@ class ReynoldsRulesNode():
         self.alignment_weight = rospy.get_param("~alignment_weight", 1.0)
         self.cohesion_weight = rospy.get_param("~cohesion_weight", 1.0)
         self.nav2point_weight = rospy.get_param("~nav2point_weight", 1.0)
-        # self.obstacle_avoidance_weight = rospy.get_param(
-        #     "~obstacle_avoidance_weight", 3.0
-        # )
+        self.obstacle_avoidance_weight = rospy.get_param(
+            "~obstacle_avoidance_weight", 3.0
+        )
 
         print(f"Starting the reynolds_rules node.")
         print(f"refresh_rate: {refresh_rate} Hz")
@@ -82,6 +82,11 @@ class ReynoldsRulesNode():
     def alignment_callback(self, data):
         self.alignment_vectors = data.vectors
 
+    def calc_length(self, weigth, vector):
+        x = weigth * vector.x
+        y = weigth * vector.y
+        return math.sqrt(x * x + y * y)
+
     # Summ vectors of each element of the swarm and publish them to its vel topic
     def control_cycle(self, _):
         for i in range(self.n_robots):
@@ -90,34 +95,42 @@ class ReynoldsRulesNode():
 
             # Check separation first to avoid collision between robots
             total_amount += self.calc_length(self.separation_weight, self.separation_vectors[i])
-            print(f"total_amount")
-            if (total_amount) <= 10:
+            print(f"1 {total_amount}")
+            if (total_amount <= 5):
                 vel.linear.x += self.separation_weight * self.separation_vectors[i].x
                 vel.linear.y += self.separation_weight * self.separation_vectors[i].y
 
             # Check avoid obstacle second to avoid collision with the enviroment
             # total_amount += self.calc_length(self.obstacle_avoidance_weight, self.obstacle_vectors[i])
-            # if (total_amount) <= 10:
+            # if (total_amount <= 5):
             #     vel.linear.x += self.obstacle_avoidance_weight * self.obstacle_vectors[i].x
             #     vel.linear.y += self.obstacle_avoidance_weight * self.obstacle_vectors[i].y
             
             # Check avoid obstacle second to avoid collision with the enviroment
             total_amount += self.calc_length(self.cohesion_weight, self.cohesion_vectors[i])
-            if (total_amount) <= 10:
+            print(f"3 {total_amount}")
+            if (total_amount <= 5):
                 vel.linear.x += self.cohesion_weight * self.cohesion_vectors[i].x
                 vel.linear.y += self.cohesion_weight * self.cohesion_vectors[i].y
             
             # Check avoid obstacle second to avoid collision with the enviroment
             total_amount += self.calc_length(self.alignment_weight, self.alignment_vectors[i])
-            if (total_amount) <= 10:
+            print(f"4 {total_amount}")
+            if (total_amount <= 5):
                 vel.linear.x += self.alignment_weight * self.alignment_vectors[i].x
                 vel.linear.y += self.alignment_weight * self.alignment_vectors[i].y
             
             # Check avoid obstacle second to avoid collision with the enviroment
             total_amount += self.calc_length(self.nav2point_weight, self.nav2point_vectors[i])
-            if (total_amount) <= 10:
+            print(f"5 {total_amount}")
+            if (total_amount <= 5):
                 vel.linear.x += self.nav2point_weight * self.nav2point_vectors[i].x
                 vel.linear.y += self.nav2point_weight * self.nav2point_vectors[i].y
+            # else:
+            #     scale = total_amount - length
+            #     vel.linear.x += self.nav2point_weight * self.nav2point_vectors[i].x
+            #     vel.linear.y += self.nav2point_weight * self.nav2point_vectors[i].y
+            # total_amount += length
 
             self.publishers[self.robot_names[i]].publish(vel)
 
