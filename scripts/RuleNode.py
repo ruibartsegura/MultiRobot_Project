@@ -10,11 +10,11 @@ from reynolds_rules.msg import VectorArray
 class RuleNode:
     def __init__(self, name):
         self.n_robots = rospy.get_param("/number_robots", 10)
-        refresh_rate = rospy.get_param("/refresh_rate", 20)
+        self.refresh_rate = rospy.get_param("/refresh_rate", 20)
 
         print(f"Starting the {name} node.")
         print(f"  number_robots: {self.n_robots}")
-        print(f"  refresh_rate: {refresh_rate}")
+        print(f"  refresh_rate: {self.refresh_rate}")
 
         self.robots = [Odometry() for _ in range(self.n_robots)]
 
@@ -22,7 +22,9 @@ class RuleNode:
             rospy.Subscriber(f"/robot_{i}/odom", Odometry, self.robot_callback)
 
         self.pub = rospy.Publisher("/" + name + "_vectors", VectorArray, queue_size=1)
-        rospy.Timer(rospy.Duration(1 / refresh_rate), self.control_cycle)
+
+    def startTimer(self):
+        rospy.Timer(rospy.Duration(1 / self.refresh_rate), self.control_cycle)
 
     def robot_callback(self, data: Odometry):
         # Saves and updates list with odom of all robots.

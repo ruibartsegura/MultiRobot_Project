@@ -36,6 +36,8 @@ class ObstacleAvoidanceNode(RuleNode):
         self.map: OccupancyGrid | None = None
         rospy.Subscriber("map", OccupancyGrid, self.callback_map)
 
+        self.startTimer()
+
     def callback_map(self, msg: OccupancyGrid):
         self.map = msg
 

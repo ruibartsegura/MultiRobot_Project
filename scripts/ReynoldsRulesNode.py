@@ -29,7 +29,9 @@ def wrap_to_pi(angle):
 
     return angle
 
+
 MAX_ANGLE_TURN = math.pi / 4
+
 
 class ReynoldsRulesNode(RuleNode):
     def __init__(self):
@@ -73,6 +75,8 @@ class ReynoldsRulesNode(RuleNode):
 
         self.init_rule_vectors()
         self.init_rule_subscribers()
+
+        self.startTimer()
 
     def init_rule_vectors(self):
         # Variables to store the value of the rule vectors

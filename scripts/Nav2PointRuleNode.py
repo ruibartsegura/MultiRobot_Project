@@ -19,6 +19,8 @@ class Nav2PointRuleNode(RuleNode):
         print(f"  point_x: {self.point.x}")
         print(f"  point_y: {self.point.y}")
 
+        self.startTimer()
+
     # Return vector from point 1 to 2
     def calc_vector(self, point1, point2):
         vector = Vector3()

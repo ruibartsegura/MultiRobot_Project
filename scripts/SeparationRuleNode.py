@@ -14,6 +14,8 @@ class SeparationRuleNode(RuleNode):
         self.view_range = rospy.get_param("~view_range", 0.3)
         print(f"  view_range: {self.view_range}")
 
+        self.startTimer()
+
     def get_distance(self, pos1, pos2):
         x = pos1.x - pos2.x
         y = pos1.y - pos2.y
