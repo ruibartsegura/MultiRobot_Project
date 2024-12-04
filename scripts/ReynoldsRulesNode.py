@@ -3,8 +3,9 @@
 import rospy
 import math
 
-from geometry_msgs.msg import Twist, Vector3
+from geometry_msgs.msg import Twist, Vector3, Quaternion
 from reynolds_rules.msg import VectorArray  # Import the custom message
+from RuleNode import RuleNode
 
 
 def calc_length(weight, vector):
@@ -12,21 +13,23 @@ def calc_length(weight, vector):
     y = weight * vector.y
     return math.sqrt(x * x + y * y)
 
+
 # Makes module of the vector the linear x velocity component
 # and the angle to where the vector point as angular velocity
-def vector2twist(vector):
+def vector2twist(vector, current_orientation: Quaternion):
     twist = Twist()
     twist.linear.x = calc_length(1, vector)
-    twist.angular.z = math.atan2(vector.y, vector.x)
-
+    twist.angular.z = math.atan2(vector.y, vector.x) - (
+        2 * math.atan2(current_orientation.z, current_orientation.w)
+    )
     return twist
 
 
-class ReynoldsRulesNode:
+class ReynoldsRulesNode(RuleNode):
     def __init__(self):
-        # Get and print all node params
-        refresh_rate = rospy.get_param("/refresh_rate", 20)
-        self.n_robots = rospy.get_param("/number_robots", 10)
+        super().__init__("reynolds_rules")
+
+        # Get threshold for priorities
         self.threshold_priorities = rospy.get_param("~threshold_priorities", 1.0)
         self.separation_weight = rospy.get_param("~separation_weight", 1.0)
         self.alignment_weight = rospy.get_param("~alignment_weight", 1.0)
@@ -62,8 +65,6 @@ class ReynoldsRulesNode:
 
         self.init_rule_vectors()
         self.init_rule_subscribers()
-
-        rospy.Timer(rospy.Duration(1 / refresh_rate), self.control_cycle)
 
     def init_rule_vectors(self):
         # Variables to store the value of the rule vectors
@@ -135,7 +136,7 @@ class ReynoldsRulesNode:
             vel.linear.x = total_vector.x
             vel.linear.y = total_vector.y
 
-            vel_msg = vector2twist(vel_vector)
+            vel_msg = vector2twist(total_vector, self.robots[i].pose.pose.orientation)
             self.publishers[self.robot_names[i]].publish(vel_msg)
 
 
