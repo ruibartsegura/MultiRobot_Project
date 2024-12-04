@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import rospy
-from RuleNode import RuleNode
+import math
 
+from RuleNode import RuleNode
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Vector3
 from reynolds_rules.msg import VectorArray
@@ -15,16 +16,24 @@ class Nav2PointRuleNode(RuleNode):
         self.point = Point()
         self.point.x = rospy.get_param("~point_x", 0)
         self.point.y = rospy.get_param("~point_y", 0)
+        self.threshold_vel = rospy.get_param("~threshold_vel", 2)
 
         print(f"  point_x: {self.point.x}")
         print(f"  point_y: {self.point.y}")
 
     # Return vector from point 1 to 2
+    # Limits vector to a threshold
     def calc_vector(self, point1, point2):
         vector = Vector3()
 
         vector.x = point2.x - point1.x
         vector.y = point2.y - point1.y
+
+        vector_lenght = math.sqrt(vector.x * vector.x + vector.y * vector.y)
+        if vector_lenght > self.threshold_vel:
+            factor = self.threshold_vel / vector_lenght
+            vector.x *= factor
+            vector.y *= factor
 
         return vector
 
@@ -33,7 +42,7 @@ class Nav2PointRuleNode(RuleNode):
         # Check if there is a new target point
         self.point.x = rospy.get_param("~point_x", self.point.x)
         self.point.y = rospy.get_param("~point_y", self.point.y)
-        
+
         nav2point_vectors = VectorArray()
 
         for robot in self.robots:
