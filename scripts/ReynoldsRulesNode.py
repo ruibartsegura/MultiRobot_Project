@@ -3,22 +3,42 @@
 import rospy
 import math
 
-from geometry_msgs.msg import Twist, Vector3
+from geometry_msgs.msg import Twist, Vector3, Quaternion
 from reynolds_rules.msg import VectorArray  # Import the custom message
+from RuleNode import RuleNode
 
 
 def calc_length(weight, vector):
+    # Return scalated vector module
     x = weight * vector.x
     y = weight * vector.y
     return math.sqrt(x * x + y * y)
 
 
-class ReynoldsRulesNode:
+def clamp(min_value, value, max_value):
+    # Limit value between other two values
+    return max(min_value, min(max_value, value))
+
+
+def wrap_to_pi(angle):
+    # Normalizar al rango [-π, π]
+    while angle > math.pi:
+        angle -= 2 * math.pi
+    while angle < -math.pi:
+        angle += 2 * math.pi
+
+    return angle
+
+MAX_ANGLE_TURN = math.pi / 4
+
+class ReynoldsRulesNode(RuleNode):
     def __init__(self):
-        # Get and print all node params
-        refresh_rate = rospy.get_param("/refresh_rate", 20)
-        self.n_robots = rospy.get_param("/number_robots", 10)
-        self.threshold_priorities = rospy.get_param("~threshold_priorities", 1.0)
+        super().__init__("null")
+
+        # Get threshold for priorities
+        self.linear_mult = rospy.get_param("~linear_mult", 1.0)
+        self.angular_mult = rospy.get_param("~angular_mult", 2.0)
+        self.threshold_vel = rospy.get_param("~threshold_vel", 1.0)
         self.separation_weight = rospy.get_param("~separation_weight", 1.0)
         self.alignment_weight = rospy.get_param("~alignment_weight", 1.0)
         self.cohesion_weight = rospy.get_param("~cohesion_weight", 1.0)
@@ -33,7 +53,7 @@ class ReynoldsRulesNode:
         print(f"  cohesion_weight: {self.cohesion_weight: >.1f}")
         print(f"  nav2point_weight: {self.nav2point_weight: >.1f}")
         print(f"  obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
-        print(f"  threshold_priorities: {self.threshold_priorities: >.1f}")
+        print(f"  threshold_vel: {self.threshold_vel: >.1f}")
 
         # Make a tuple with the correct namespace of the robots
         # I use a tuple to avoid having problems later if by mistake the list is changed
@@ -54,7 +74,23 @@ class ReynoldsRulesNode:
         self.init_rule_vectors()
         self.init_rule_subscribers()
 
-        rospy.Timer(rospy.Duration(1 / refresh_rate), self.control_cycle)
+    def init_rule_vectors(self):
+        # Variables to store the value of the rule vectors
+        self.separation_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.cohesion_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.nav2point_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.obstacle_avoidance_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.alignment_vectors = [Vector3() for _ in range(self.n_robots)]
+
+    def init_rule_subscribers(self):
+        # Subscribers to the rules topics
+        rospy.Subscriber("/separation_vectors", VectorArray, self.separation_callback)
+        rospy.Subscriber("/cohesion_vectors", VectorArray, self.cohesion_callback)
+        rospy.Subscriber("/nav2point_vectors", VectorArray, self.nav2point_callback)
+        rospy.Subscriber("/alignment_vectors", VectorArray, self.alignment_callback)
+        rospy.Subscriber(
+            "/obstacle_avoidance_vectors", VectorArray, self.obstacle_avoidance_callback
+        )
 
     def init_rule_vectors(self):
         # Variables to store the value of the rule vectors
@@ -90,6 +126,24 @@ class ReynoldsRulesNode:
     def alignment_callback(self, data):
         self.alignment_vectors = data.vectors
 
+    # Makes module of the vector the linear x velocity component
+    # and the angle to where the vector point as angular velocity
+    def vector2twist(self, vector, current_orientation: Quaternion):
+        twist = Twist()
+
+        current_angle = 2 * math.atan2(current_orientation.z, current_orientation.w)
+        error_angle = wrap_to_pi(math.atan2(vector.y, vector.x) - current_angle)
+
+        if error_angle > MAX_ANGLE_TURN or error_angle < -MAX_ANGLE_TURN:
+            linear_vel = 0
+        else:
+            linear_vel = self.linear_mult * calc_length(1, vector)
+
+        twist.linear.x = clamp(0, linear_vel, self.threshold_vel)
+        twist.angular.z = self.angular_mult * error_angle
+
+        return twist
+
     # Summ vectors of each element of the swarm and publish them to its vel topic
     def control_cycle(self, _):
         for i in range(self.n_robots):
@@ -117,15 +171,11 @@ class ReynoldsRulesNode:
                 total_vector.x += weight * rule[i].x
                 total_vector.y += weight * rule[i].y
 
-                if calc_length(1, total_vector) > self.threshold_priorities:
+                if calc_length(1, total_vector) > self.threshold_vel:
                     print("prioritazing")
                     break
 
-            # Create and publish velocity for each robot
-            vel = Twist()
-            vel.linear.x = total_vector.x
-            vel.linear.y = total_vector.y
-
+            vel = self.vector2twist(total_vector, self.robots[i].pose.pose.orientation)
             self.publishers[self.robot_names[i]].publish(vel)
 
 
