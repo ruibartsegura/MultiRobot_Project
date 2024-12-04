@@ -9,12 +9,14 @@
   <!-- Principal Node. Head of the system -->
   <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen" >
     <rosparam>
+      linear_mult: 0.6
+      angular_mult: 2
       separation_weight: 0.8
-      alignment_weight: 0.5
-      nav2point_weight: 0.1
+      alignment_weight: 0.8
+      nav2point_weight: 0.2
       cohesion_weight: 0.1
-      obstacle_avoidance_weight: 0.8
-      threshold_priorities: 1
+      obstacle_avoidance_weight: 0.6
+      threshold_vel: 1
     </rosparam>
   </node>
 
@@ -43,7 +45,7 @@
 
   <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule">
     <rosparam>
-      point_x : 4
+      point_x : -4
       point_y : 0
     </rosparam>
   </node>
