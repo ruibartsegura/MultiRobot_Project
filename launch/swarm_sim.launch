@@ -11,9 +11,9 @@
     <rosparam>
       separation_weight: 0.8
       alignment_weight: 0.5
-      nav2point_weight: 0.01
+      nav2point_weight: 0.1
       cohesion_weight: 0.1
-      obstacle_avoidance_weight: 2.0
+      obstacle_avoidance_weight: 0.8
       threshold_priorities: 1
     </rosparam>
   </node>
