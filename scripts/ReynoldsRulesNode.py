@@ -92,24 +92,6 @@ class ReynoldsRulesNode(RuleNode):
             "/obstacle_avoidance_vectors", VectorArray, self.obstacle_avoidance_callback
         )
 
-    def init_rule_vectors(self):
-        # Variables to store the value of the rule vectors
-        self.separation_vectors = [Vector3() for _ in range(self.n_robots)]
-        self.cohesion_vectors = [Vector3() for _ in range(self.n_robots)]
-        self.nav2point_vectors = [Vector3() for _ in range(self.n_robots)]
-        self.obstacle_avoidance_vectors = [Vector3() for _ in range(self.n_robots)]
-        self.alignment_vectors = [Vector3() for _ in range(self.n_robots)]
-
-    def init_rule_subscribers(self):
-        # Subscribers to the rules topics
-        rospy.Subscriber("/separation_vectors", VectorArray, self.separation_callback)
-        rospy.Subscriber("/cohesion_vectors", VectorArray, self.cohesion_callback)
-        rospy.Subscriber("/nav2point_vectors", VectorArray, self.nav2point_callback)
-        rospy.Subscriber("/alignment_vectors", VectorArray, self.alignment_callback)
-        rospy.Subscriber(
-            "/obstacle_avoidance_vectors", VectorArray, self.obstacle_avoidance_callback
-        )
-
     # Callback for each rule. Save vector list in class atribute
     def separation_callback(self, data):
         self.separation_vectors = data.vectors
