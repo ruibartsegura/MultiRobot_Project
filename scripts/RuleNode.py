@@ -9,8 +9,8 @@ from reynolds_rules.msg import VectorArray
 # Parent class of rule node classes
 class RuleNode:
     def __init__(self, name):
-        self.n_robots = rospy.get_param("number_robots", 10)
-        refresh_rate = rospy.get_param("refresh_rate", 20)
+        self.n_robots = rospy.get_param("/number_robots", 10)
+        refresh_rate = rospy.get_param("/refresh_rate", 20)
 
         print(f"Starting the {name} node.")
         print(f"  number_robots: {self.n_robots}")
