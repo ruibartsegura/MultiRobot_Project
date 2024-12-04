@@ -10,6 +10,11 @@
   <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" >
     <rosparam>
       linear_mult: 2
+      angular_mult: 5
+      separation_weight: 0.8
+      alignment_weight: 0.3
+      nav2point_weight: 0.3
+      linear_mult: 2
       angular_mult: 3
       separation_weight: 0.8
       alignment_weight: 0.3
