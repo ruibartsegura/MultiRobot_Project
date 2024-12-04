@@ -1,7 +1,7 @@
 <launch>
   <!-- Global params for all rules and nodes -->
   <param name="number_robots" value="10" />
-  <param name="refresh_rate" value="10" />
+  <param name="refresh_rate" value="30" />
 
   <!-- stage -->
   <node pkg="sphero_stage" type="start.py" name="sphero_stage" required="true" />
@@ -9,12 +9,12 @@
   <!-- Principal Node. Head of the system -->
   <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen" >
     <rosparam>
-      linear_mult: 0.6
-      angular_mult: 2
-      separation_weight: 0.8
+      linear_mult: 1
+      angular_mult: 3
+      separation_weight: 1
       alignment_weight: 0.8
-      nav2point_weight: 0.2
-      cohesion_weight: 0.1
+      nav2point_weight: 0.6
+      cohesion_weight: 0.4
       obstacle_avoidance_weight: 0.6
       threshold_vel: 1
     </rosparam>
@@ -37,7 +37,7 @@
 
   <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule">
     <rosparam>
-      view_range: 0.5
+      view_range: 0.8
       view_angle: 60
       view_split: 0
     </rosparam>
@@ -47,6 +47,7 @@
     <rosparam>
       point_x : -4
       point_y : 0
+      threshold_vel: 0.6
     </rosparam>
   </node>
 

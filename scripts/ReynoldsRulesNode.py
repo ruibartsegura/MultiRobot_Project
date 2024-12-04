@@ -14,12 +14,6 @@ def calc_length(weight, vector):
     y = weight * vector.y
     return math.sqrt(x * x + y * y)
 
-
-def clamp(min_value, value, max_value):
-    # Limit value between other two values
-    return max(min_value, min(max_value, value))
-
-
 def wrap_to_pi(angle):
     # Normalizar al rango [-π, π]
     while angle > math.pi:
@@ -30,6 +24,7 @@ def wrap_to_pi(angle):
     return angle
 
 MAX_ANGLE_TURN = math.pi / 4
+MIN_LINEAR_VEL = 0.05
 
 class ReynoldsRulesNode(RuleNode):
     def __init__(self):
@@ -116,12 +111,11 @@ class ReynoldsRulesNode(RuleNode):
         current_angle = 2 * math.atan2(current_orientation.z, current_orientation.w)
         error_angle = wrap_to_pi(math.atan2(vector.y, vector.x) - current_angle)
 
-        if error_angle > MAX_ANGLE_TURN or error_angle < -MAX_ANGLE_TURN:
-            linear_vel = 0
-        else:
+        linear_vel = MIN_LINEAR_VEL
+        if error_angle < MAX_ANGLE_TURN and error_angle > -MAX_ANGLE_TURN:
             linear_vel = self.linear_mult * calc_length(1, vector)
 
-        twist.linear.x = clamp(0, linear_vel, self.threshold_vel)
+        twist.linear.x = min(linear_vel, self.threshold_vel)
         twist.angular.z = self.angular_mult * error_angle
 
         return twist
