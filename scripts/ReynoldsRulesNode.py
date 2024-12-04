@@ -68,6 +68,8 @@ class ReynoldsRulesNode(RuleNode):
         self.init_rule_vectors()
         self.init_rule_subscribers()
 
+        self.startTimer()
+
     def init_rule_vectors(self):
         # Variables to store the value of the rule vectors
         self.separation_vectors = [Vector3() for _ in range(self.n_robots)]

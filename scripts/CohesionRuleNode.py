@@ -26,6 +26,8 @@ class CohesionRuleNode(RuleNode):
         self.view_range = rospy.get_param("~view_range", 0.3)
         print(f"  view_range: {self.view_range}")
 
+        self.startTimer()
+
     # Returns average position between all robots positions in the neighbor
     def calc_average_pos(self, positions):
         average_pos = Point()

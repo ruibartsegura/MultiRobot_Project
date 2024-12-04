@@ -12,6 +12,8 @@ class AlignmentRuleNode(RuleNode):
     def __init__(self):
         super().__init__("alignment")
 
+        self.startTimer()
+
     # Compute average velocity of all robots
     def calc_average_velocity(self):
         avg_velocity = Vector3()
