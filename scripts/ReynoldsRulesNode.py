@@ -13,21 +13,6 @@ def calc_length(weight, vector):
     return math.sqrt(x * x + y * y)
 
 
-def add_rule(total_vector, total_length, max_length, rule_weight, rule_vector):
-    """Adds the rule to total_vector so that it does not exceed max_length"""
-    l = calc_length(rule_weight, rule_vector)
-    multiplier = 1
-    if total_length + l > max_length:
-        # scale down the rule_vector so that the total_length will be the same as max_length
-        t = min(max_length, total_length)  # use min to prevent a negative multiplier
-        multiplier = (max_length - t) / (total_length + l)
-
-    total_vector.x += multiplier * rule_weight * rule_vector.x
-    total_vector.y += multiplier * rule_weight * rule_vector.y
-    total_length += multiplier * l
-    return (total_vector, total_length)
-
-
 class ReynoldsRulesNode:
     def __init__(self):
         refresh_rate = rospy.get_param("/refresh_rate", 20)
@@ -106,50 +91,40 @@ class ReynoldsRulesNode:
     # Summ vectors of each element of the swarm and publish them to its vel topic
     def control_cycle(self, _):
         for i in range(self.n_robots):
-            vector = Vector3()
-            length = 0
-            # 1st priority: separation
-            (vector, length) = add_rule(
-                total_vector=vector,
-                total_length=length,
-                max_length=self.threshold_priorities,
-                rule_weight=self.separation_weight,
-                rule_vector=self.separation_vectors[i],
-            )
-            # 2nd priority: obstacle avoidance
-            (vector, length) = add_rule(
-                total_vector=vector,
-                total_length=length,
-                max_length=self.threshold_priorities,
-                rule_weight=self.obstacle_avoidance_weight,
-                rule_vector=self.obstacle_avoidance_vectors[i],
-            )
-            # 3rd priority: cohesion
-            (vector, length) = add_rule(
-                total_vector=vector,
-                total_length=length,
-                max_length=self.threshold_priorities,
-                rule_weight=self.cohesion_weight,
-                rule_vector=self.cohesion_vectors[i],
-            )
-            # 4th priority: alignment
-            (vector, length) = add_rule(
-                total_vector=vector,
-                total_length=length,
-                max_length=self.threshold_priorities,
-                rule_weight=self.alignment_weight,
-                rule_vector=self.alignment_vectors[i],
-            )
-            # 5th priority: navigation
-            (vector, length) = add_rule(
-                total_vector=vector,
-                total_length=length,
-                max_length=self.threshold_priorities,
-                rule_weight=self.nav2point_weight,
-                rule_vector=self.nav2point_vectors[i],
-            )
+            total_vector = Vector3()
 
-            self.publishers[self.robot_names[i]].publish(Twist(linear=vector))
+            # Vectors and weights list in prioritiy order
+            rules = [
+                self.separation_vectors,
+                self.obstacle_avoidance_vectors,
+                self.alignment_vectors,
+                self.cohesion_vectors,
+                self.nav2point_vectors,
+            ]
+
+            weights = [
+                self.separation_weight,
+                self.obstacle_avoidance_weight,
+                self.alignment_weight,
+                self.cohesion_weight,
+                self.nav2point_weight,
+            ]
+
+            # Add each rule to total vector, until total vector exced threshold
+            for rule, weight in zip(rules, weights):
+                total_vector.x += weight * rule[i].x
+                total_vector.y += weight * rule[i].y
+
+                if calc_length(1, total_vector) > self.threshold_priorities:
+                    print("prioritazing")
+                    break
+
+            # Create and publish velocity for each robot
+            vel = Twist()
+            vel.linear.x = total_vector.x
+            vel.linear.y = total_vector.y
+
+            self.publishers[self.robot_names[i]].publish(vel)
 
 
 if __name__ == "__main__":
