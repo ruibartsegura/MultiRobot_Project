@@ -4,7 +4,6 @@ import rospy
 import math
 
 from RuleNode import RuleNode
-
 from geometry_msgs.msg import Point
 from nav_msgs.msg import OccupancyGrid
 from typing import List, Tuple
