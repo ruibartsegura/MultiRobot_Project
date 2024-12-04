@@ -24,13 +24,10 @@ def vector2twist(vector):
 
 class ReynoldsRulesNode:
     def __init__(self):
+        # Get and print all node params
         refresh_rate = rospy.get_param("/refresh_rate", 20)
         self.n_robots = rospy.get_param("/number_robots", 10)
-
-        # Get threshold for priorities
         self.threshold_priorities = rospy.get_param("~threshold_priorities", 1.0)
-
-        # Get and print weigths for each rule
         self.separation_weight = rospy.get_param("~separation_weight", 1.0)
         self.alignment_weight = rospy.get_param("~alignment_weight", 1.0)
         self.cohesion_weight = rospy.get_param("~cohesion_weight", 1.0)
@@ -47,29 +44,13 @@ class ReynoldsRulesNode:
         print(f"  obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
         print(f"  threshold_priorities: {self.threshold_priorities: >.1f}")
 
-        # Variables to store the value of the rule vectors
-        self.separation_vectors = [Vector3() for _ in range(self.n_robots)]
-        self.cohesion_vectors = [Vector3() for _ in range(self.n_robots)]
-        self.nav2point_vectors = [Vector3() for _ in range(self.n_robots)]
-        self.obstacle_avoidance_vectors = [Vector3() for _ in range(self.n_robots)]
-        self.alignment_vectors = [Vector3() for _ in range(self.n_robots)]
-
-        # Subscribers to the rules topics
-        rospy.Subscriber("/separation_vectors", VectorArray, self.separation_callback)
-        rospy.Subscriber("/cohesion_vectors", VectorArray, self.cohesion_callback)
-        rospy.Subscriber("/nav2point_vectors", VectorArray, self.nav2point_callback)
-        rospy.Subscriber("/alignment_vectors", VectorArray, self.alignment_callback)
-        rospy.Subscriber(
-            "/obstacle_avoidance_vectors", VectorArray, self.obstacle_avoidance_callback
-        )
-
         # Make a tuple with the correct namespace of the robots
         # I use a tuple to avoid having problems later if by mistake the list is changed
         self.robot_names = []
-        name = "robot_"
         for num in range(self.n_robots):
-            new_name = name + str(num)
-            self.robot_names.append(new_name)
+            name = "robot_" + str(num)
+            self.robot_names.append(name)
+
         self.robot_names = tuple(self.robot_names)
 
         # Make a dictionary, it will match each namespace with the corresponding publisher
@@ -79,7 +60,28 @@ class ReynoldsRulesNode:
             topic = "/" + name + "/cmd_vel"
             self.publishers[name] = rospy.Publisher(topic, Twist, queue_size=1)
 
+        self.init_rule_vectors()
+        self.init_rule_subscribers()
+
         rospy.Timer(rospy.Duration(1 / refresh_rate), self.control_cycle)
+
+    def init_rule_vectors(self):
+        # Variables to store the value of the rule vectors
+        self.separation_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.cohesion_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.nav2point_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.obstacle_avoidance_vectors = [Vector3() for _ in range(self.n_robots)]
+        self.alignment_vectors = [Vector3() for _ in range(self.n_robots)]
+
+    def init_rule_subscribers(self):
+        # Subscribers to the rules topics
+        rospy.Subscriber("/separation_vectors", VectorArray, self.separation_callback)
+        rospy.Subscriber("/cohesion_vectors", VectorArray, self.cohesion_callback)
+        rospy.Subscriber("/nav2point_vectors", VectorArray, self.nav2point_callback)
+        rospy.Subscriber("/alignment_vectors", VectorArray, self.alignment_callback)
+        rospy.Subscriber(
+            "/obstacle_avoidance_vectors", VectorArray, self.obstacle_avoidance_callback
+        )
 
     # Callback for each rule. Save vector list in class atribute
     def separation_callback(self, data):
