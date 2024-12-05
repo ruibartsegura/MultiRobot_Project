@@ -14,6 +14,7 @@ def calc_length(vector, weight=1):
     y = weight * vector.y
     return math.sqrt(x * x + y * y)
 
+
 def wrap_to_pi(angle):
     # Normalizar al rango [-π, π]
     while angle > math.pi:
@@ -112,11 +113,6 @@ class ReynoldsRulesNode(RuleNode):
         current_angle = 2 * math.atan2(current_orientation.z, current_orientation.w)
         error_angle = wrap_to_pi(math.atan2(vector.y, vector.x) - current_angle)
 
-        linear_vel = MIN_LINEAR_VEL
-        if error_angle < MAX_ANGLE_TURN and error_angle > -MAX_ANGLE_TURN:
-            linear_vel = self.linear_mult * calc_length(1, vector)
-
-        twist.linear.x = min(linear_vel, self.threshold_vel)
         twist.angular.z = self.angular_mult * error_angle
 
         # reduce linear speed exponentially when turning to shrink the turning radius
