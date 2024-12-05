@@ -11,9 +11,9 @@
     <rosparam>
       linear_mult: 2
       angular_mult: 3
-      separation_weight: 0.9
-      alignment_weight: 0.4
-      nav2point_weight: 0.6
+      separation_weight: 0.8
+      alignment_weight: 0.3
+      nav2point_weight: 0.5
       cohesion_weight: 0.4
       obstacle_avoidance_weight: 0.8
       max_linear_vel: 0.5
@@ -38,7 +38,7 @@
 
   <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule">
     <rosparam>
-      view_range: 0.5
+      view_range: 0.45
       view_angle: 90
       view_split: 15
     </rosparam>
@@ -48,7 +48,7 @@
     <rosparam>
       point_x : -4
       point_y : 0
-      max_linear_vel: 0.45
+      max_linear_vel: 0.4
     </rosparam>
   </node>
 
