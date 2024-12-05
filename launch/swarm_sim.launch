@@ -12,23 +12,19 @@
       linear_mult: 2
       angular_mult: 3
       separation_weight: 0.8
-      alignment_weight: 0.3
-      nav2point_weight: 0.3
-      linear_mult: 2
-      angular_mult: 3
-      separation_weight: 0.8
-      alignment_weight: 0.3
-      nav2point_weight: 0.3
-      cohesion_weight: 0.4
+      alignment_weight: 0.4
+      nav2point_weight: 0.5
+      cohesion_weight: 0.5
       obstacle_avoidance_weight: 0.8
-      threshold_vel: 0.5
+      max_linear_vel: 0.5
+      min_linear_vel: 0.02
     </rosparam>
   </node>
 
   <!-- Now run every other node (rule) with neccessary params or remaps -->
   <node pkg="reynolds_rules" type="SeparationRuleNode.py" name="separation_rule">
     <rosparam>
-      view_range: 0.5
+      view_range: 0.4
     </rosparam>
   </node>
 
@@ -36,13 +32,13 @@
 
   <node pkg="reynolds_rules" type="CohesionRuleNode.py" name="cohesion_rule">
     <rosparam>
-      view_range: 1.0
+      view_range: 2
     </rosparam>
   </node>
 
   <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule">
     <rosparam>
-      view_range: 0.3
+      view_range: 0.5
       view_angle: 90
       view_split: 15
     </rosparam>
@@ -52,7 +48,7 @@
     <rosparam>
       point_x : -4
       point_y : 0
-      threshold_vel: 0.6
+      max_linear_vel: 0.4
     </rosparam>
   </node>
 

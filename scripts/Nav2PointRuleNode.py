@@ -28,7 +28,7 @@ class Nav2PointRuleNode(RuleNode):
         self.point = Point()
         self.point.x = rospy.get_param("~point_x", 0)
         self.point.y = rospy.get_param("~point_y", 0)
-        self.threshold_vel = rospy.get_param("~threshold_vel", 2)
+        self.max_linear_vel = rospy.get_param("~max_linear_vel", 2)
 
         print(f"  point_x: {self.point.x}")
         print(f"  point_y: {self.point.y}")
@@ -175,8 +175,8 @@ class Nav2PointRuleNode(RuleNode):
         vector.y = point2.y - point1.y
 
         vector_lenght = math.sqrt(vector.x * vector.x + vector.y * vector.y)
-        if vector_lenght > self.threshold_vel:
-            factor = self.threshold_vel / vector_lenght
+        if vector_lenght > self.max_linear_vel:
+            factor = self.max_linear_vel / vector_lenght
             vector.x *= factor
             vector.y *= factor
 

@@ -24,16 +24,19 @@ def wrap_to_pi(angle):
 
     return angle
 
-MIN_LINEAR_VEL = 0.05
+
+MAX_VEL_DIFF_FACTOR = 0.2
+
 
 class ReynoldsRulesNode(RuleNode):
     def __init__(self):
-        super().__init__("null")
+        super().__init__("reynolds_rules")
 
         # Get threshold for priorities
         self.linear_mult = rospy.get_param("~linear_mult", 1.0)
         self.angular_mult = rospy.get_param("~angular_mult", 2.0)
-        self.threshold_vel = rospy.get_param("~threshold_vel", 1.0)
+        self.max_linear_vel = rospy.get_param("~max_linear_vel", 1.0)
+        self.min_linear_vel = rospy.get_param("~min_linear_vel", 0)
         self.separation_weight = rospy.get_param("~separation_weight", 1.0)
         self.alignment_weight = rospy.get_param("~alignment_weight", 1.0)
         self.cohesion_weight = rospy.get_param("~cohesion_weight", 1.0)
@@ -48,7 +51,7 @@ class ReynoldsRulesNode(RuleNode):
         print(f"  cohesion_weight: {self.cohesion_weight: >.1f}")
         print(f"  nav2point_weight: {self.nav2point_weight: >.1f}")
         print(f"  obstacle_avoidance_weight: {self.obstacle_avoidance_weight: >.1f}")
-        print(f"  threshold_vel: {self.threshold_vel: >.1f}")
+        print(f"  max_linear_vel: {self.max_linear_vel: >.1f}")
 
         # Make a tuple with the correct namespace of the robots
         # I use a tuple to avoid having problems later if by mistake the list is changed
@@ -68,6 +71,7 @@ class ReynoldsRulesNode(RuleNode):
 
         self.init_rule_vectors()
         self.init_rule_subscribers()
+        self.last_linear_vel = 0
 
         self.startTimer()
 
@@ -118,39 +122,50 @@ class ReynoldsRulesNode(RuleNode):
         # reduce linear speed exponentially when turning to shrink the turning radius
         linear_vel = (
             self.linear_mult * calc_length(vector) * math.exp(-abs(twist.angular.z))
+            + self.min_linear_vel
         )
-        twist.linear.x = min(linear_vel, self.threshold_vel)
 
+        twist.linear.x = min(linear_vel, self.max_linear_vel)
+
+        # If change in velocity is too big, reduce linear velocity (smoother movement)
+        linear_vel_change = math.fabs(twist.linear.x - self.last_linear_vel)
+        if linear_vel_change > MAX_VEL_DIFF_FACTOR * self.last_linear_vel:
+            twist.linear.x = (twist.linear.x + 2 * self.last_linear_vel) / 3
+
+        self.last_linear_vel = twist.linear.x
         return twist
 
     # Summ vectors of each element of the swarm and publish them to its vel topic
     def control_cycle(self, _):
+        # Vectors and weights list in prioritiy order
+        rules = [
+            self.separation_vectors,
+            self.nav2point_vectors,
+            self.obstacle_avoidance_vectors,
+            self.alignment_vectors,
+            self.cohesion_vectors,
+        ]
+
+        weights = [
+            self.separation_weight,
+            self.nav2point_weight,
+            self.obstacle_avoidance_weight,
+            self.cohesion_weight,
+            self.alignment_weight,
+        ]
+
         for i in range(self.n_robots):
             total_vector = Vector3()
 
-            # Vectors and weights list in prioritiy order
-            rules = [
-                self.separation_vectors,
-                self.obstacle_avoidance_vectors,
-                self.alignment_vectors,
-                self.cohesion_vectors,
-                self.nav2point_vectors,
-            ]
-
-            weights = [
-                self.separation_weight,
-                self.obstacle_avoidance_weight,
-                self.alignment_weight,
-                self.cohesion_weight,
-                self.nav2point_weight,
-            ]
-
             # Add each rule to total vector, until total vector exced threshold
             for rule, weight in zip(rules, weights):
-                total_vector.x += weight * rule[i].x
-                total_vector.y += weight * rule[i].y
+                new_vector = Vector3()
+                new_vector.x = weight * rule[i].x
+                new_vector.y = weight * rule[i].y
 
-                if calc_length(total_vector) > self.threshold_vel:
+                total_vector.x += new_vector.x
+                total_vector.y += new_vector.y
+                if calc_length(new_vector) > self.max_linear_vel:
                     break
 
             vel = self.vector2twist(total_vector, self.robots[i].pose.pose.orientation)
