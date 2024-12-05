@@ -30,6 +30,11 @@ class Nav2PointRuleNode(RuleNode):
         self.point.y = rospy.get_param("~point_y", 0)
         self.threshold_vel = rospy.get_param("~threshold_vel", 2)
 
+        self.prev_point = Point()
+        self.prev_point.x = None
+        self.prev_point.y = None
+        
+
         print(f"  point_x: {self.point.x}")
         print(f"  point_y: {self.point.y}")
 
@@ -169,6 +174,38 @@ class Nav2PointRuleNode(RuleNode):
 
         return vector
 
+    def find_path_through_waypoints(self, start: Point, target: Point) -> List[Point]:
+        """
+        Find a route from `start` to `target` using BFS only between the waypoints,
+        ensuring that paths between neighbors are clear.
+        """
+        start_pos = (start.x, start.y)
+        target_pos = (target.x, target.y)
+        
+        queue = [(start_pos, [start_pos])]
+        visited = set()
+        visited.add(start_pos)
+
+        waypoint_positions = {(wp.x, wp.y): wp for wp in self.waypoints}
+
+        while queue:
+            current_pos, path = queue.pop(0)
+
+            if current_pos == target_pos:
+                return [waypoint_positions[pos] for pos in path]
+
+            current_wp = waypoint_positions[current_pos]
+            neighbors = self.find_neighbors(self.waypoints, current_wp)
+
+            for neighbor in neighbors:
+                neighbor_pos = (neighbor.x, neighbor.y)
+                if neighbor_pos not in visited and self.is_path_clear(current_pos, neighbor_pos):
+                    visited.add(neighbor_pos)
+                    queue.append((neighbor_pos, path + [neighbor_pos]))
+
+        rospy.logwarn("No available route found..")
+        return []
+
     # Make and publish array of velocity vector to given point
     def control_cycle(self, _):
         # Check if there is a new target point
@@ -232,7 +269,6 @@ class Nav2PointRuleNode(RuleNode):
                 dist = calc_distance(start, wp)
                 closer_2_target = wp
         nav2point_vectors = VectorArray()
-        print("closer_2_target ", closer_2_target)
 
         for robot in self.robots:
             nav2point_vector = self.calc_vector(robot.pose.pose.position, self.path[0])
