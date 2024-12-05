@@ -38,7 +38,7 @@
 
   <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule">
     <rosparam>
-      view_range: 0.45
+      view_range: 0.35
       view_angle: 90
       view_split: 15
     </rosparam>
