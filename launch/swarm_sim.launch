@@ -9,15 +9,15 @@
   <!-- Principal Node. Head of the system -->
   <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen" >
     <rosparam>
-      linear_mult: 1.3
-      angular_mult: 2.6
-      separation_weight: 0.9
+      linear_mult: 2
+      angular_mult: 3
+      separation_weight: 0.8
       alignment_weight: 0.4
       nav2point_weight: 0.5
       cohesion_weight: 0.5
       obstacle_avoidance_weight: 0.8
       max_linear_vel: 0.5
-      min_linear_vel: 0.04
+      min_linear_vel: 0.02
     </rosparam>
   </node>
 
@@ -38,7 +38,7 @@
 
   <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule">
     <rosparam>
-      view_range: 0.4
+      view_range: 0.5
       view_angle: 90
       view_split: 15
     </rosparam>
@@ -48,7 +48,7 @@
     <rosparam>
       point_x : -4
       point_y : 0
-      max_linear_vel: 0.5
+      max_linear_vel: 0.4
     </rosparam>
   </node>
 

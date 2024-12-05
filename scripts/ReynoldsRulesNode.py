@@ -25,7 +25,7 @@ def wrap_to_pi(angle):
     return angle
 
 
-MAX_VEL_DIFF_FACTOR = 0.5
+MAX_VEL_DIFF_FACTOR = 0.2
 
 
 class ReynoldsRulesNode(RuleNode):
@@ -128,7 +128,7 @@ class ReynoldsRulesNode(RuleNode):
         # If change in velocity is too big, reduce linear velocity (smoother movement)
         linear_vel_change = math.fabs(twist.linear.x - self.last_linear_vel)
         if linear_vel_change > MAX_VEL_DIFF_FACTOR * self.last_linear_vel:
-            twist.linear.x = (2 * twist.linear.x + self.last_linear_vel) / 3
+            twist.linear.x = (twist.linear.x + 2*self.last_linear_vel) / 3
 
         self.last_linear_vel = twist.linear.x
         return twist
