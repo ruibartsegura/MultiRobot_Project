@@ -6,6 +6,7 @@ import math
 from geometry_msgs.msg import Twist, Vector3, Quaternion
 from reynolds_rules.msg import VectorArray  # Import the custom message
 from RuleNode import RuleNode
+from std_msgs.msg import Bool
 
 
 def calc_length(weight, vector):
@@ -74,6 +75,8 @@ class ReynoldsRulesNode(RuleNode):
         self.init_rule_vectors()
         self.init_rule_subscribers()
 
+        self.change_waypoint = rospy.Publisher('change_waypoint', Bool, queue_size=1)
+
     def init_rule_vectors(self):
         # Variables to store the value of the rule vectors
         self.separation_vectors = [Vector3() for _ in range(self.n_robots)]
@@ -128,6 +131,12 @@ class ReynoldsRulesNode(RuleNode):
 
     # Summ vectors of each element of the swarm and publish them to its vel topic
     def control_cycle(self, _):
+        # Variables to check if the robots are stop
+        stop = 0
+        average_vel = 0
+        
+        
+
         for i in range(self.n_robots):
             total_vector = Vector3()
 
@@ -158,7 +167,15 @@ class ReynoldsRulesNode(RuleNode):
                     break
 
             vel = self.vector2twist(total_vector, self.robots[i].pose.pose.orientation)
+            average_vel += vel
             self.publishers[self.robot_names[i]].publish(vel)
+
+        if (average_vel / self.n_robots < 0.01):
+            stop += 1
+            if stop >= 50:
+                
+                stop = 0
+
 
 
 if __name__ == "__main__":
