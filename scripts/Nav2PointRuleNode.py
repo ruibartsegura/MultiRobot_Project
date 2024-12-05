@@ -3,7 +3,6 @@
 import rospy
 import math
 from RuleNode import RuleNode
-
 from geometry_msgs.msg import Point
 from nav_msgs.msg import OccupancyGrid
 from typing import List, Tuple
@@ -29,6 +28,7 @@ class Nav2PointRuleNode(RuleNode):
         self.point = Point()
         self.point.x = rospy.get_param("~point_x", 0)
         self.point.y = rospy.get_param("~point_y", 0)
+        self.threshold_vel = rospy.get_param("~threshold_vel", 2)
 
         print(f"  point_x: {self.point.x}")
         print(f"  point_y: {self.point.y}")
@@ -106,11 +106,18 @@ class Nav2PointRuleNode(RuleNode):
         return True
 
     # Return vector from point 1 to 2
+    # Limits vector to a threshold
     def calc_vector(self, point1, point2):
         vector = Vector3()
 
         vector.x = point2.x - point1.x
         vector.y = point2.y - point1.y
+
+        vector_lenght = math.sqrt(vector.x * vector.x + vector.y * vector.y)
+        if vector_lenght > self.threshold_vel:
+            factor = self.threshold_vel / vector_lenght
+            vector.x *= factor
+            vector.y *= factor
 
         return vector
 
