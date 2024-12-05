@@ -10,7 +10,7 @@
   <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen" >
     <rosparam>
       linear_mult: 2
-      angular_mult: 5
+      angular_mult: 3
       separation_weight: 0.8
       alignment_weight: 0.3
       nav2point_weight: 0.3
@@ -37,9 +37,9 @@
 
   <node pkg="reynolds_rules" type="ObstacleAvoidanceNode.py" name="obstacle_avoidance_rule">
     <rosparam>
-      view_range: 0.8
-      view_angle: 60
-      view_split: 0
+      view_range: 0.3
+      view_angle: 90
+      view_split: 15
     </rosparam>
   </node>
 
