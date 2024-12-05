@@ -7,7 +7,7 @@
   <node pkg="sphero_stage" type="start.py" name="sphero_stage" required="true" />
 
   <!-- Principal Node. Head of the system -->
-  <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" >
+  <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen">
     <rosparam>
       linear_mult: 2
       angular_mult: 3
