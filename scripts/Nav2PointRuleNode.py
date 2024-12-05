@@ -4,6 +4,7 @@ import rospy
 import math
 
 from RuleNode import RuleNode
+
 from geometry_msgs.msg import Point
 from nav_msgs.msg import OccupancyGrid
 from typing import List, Tuple
@@ -29,11 +30,6 @@ class Nav2PointRuleNode(RuleNode):
         self.point.x = rospy.get_param("~point_x", 0)
         self.point.y = rospy.get_param("~point_y", 0)
         self.threshold_vel = rospy.get_param("~threshold_vel", 2)
-
-        self.prev_point = Point()
-        self.prev_point.x = None
-        self.prev_point.y = None
-        
 
         print(f"  point_x: {self.point.x}")
         print(f"  point_y: {self.point.y}")
@@ -191,12 +187,14 @@ class Nav2PointRuleNode(RuleNode):
         while queue:
             current_pos, path = queue.pop(0)
 
+            # Check if we are currentrly in the target
             if current_pos == target_pos:
                 return [waypoint_positions[pos] for pos in path]
 
             current_wp = waypoint_positions[current_pos]
             neighbors = self.find_neighbors(self.waypoints, current_wp)
 
+            # Check posible paths with the neighbors
             for neighbor in neighbors:
                 neighbor_pos = (neighbor.x, neighbor.y)
                 if neighbor_pos not in visited and self.is_path_clear(current_pos, neighbor_pos):
@@ -205,6 +203,22 @@ class Nav2PointRuleNode(RuleNode):
 
         rospy.logwarn("No available route found..")
         return []
+
+    # Return vector from point 1 to 2
+    # Limits vector to a threshold
+    def calc_vector(self, point1, point2):
+        vector = Vector3()
+
+        vector.x = point2.x - point1.x
+        vector.y = point2.y - point1.y
+
+        vector_lenght = math.sqrt(vector.x * vector.x + vector.y * vector.y)
+        if vector_lenght > self.threshold_vel:
+            factor = self.threshold_vel / vector_lenght
+            vector.x *= factor
+            vector.y *= factor
+
+        return vector
 
     # Make and publish array of velocity vector to given point
     def control_cycle(self, _):
