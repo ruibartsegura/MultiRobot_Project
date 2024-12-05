@@ -8,16 +8,11 @@ from reynolds_rules.msg import VectorArray  # Import the custom message
 from RuleNode import RuleNode
 
 
-def calc_length(weight, vector):
+def calc_length(vector, weight=1):
     # Return scalated vector module
     x = weight * vector.x
     y = weight * vector.y
     return math.sqrt(x * x + y * y)
-
-
-def clamp(min_value, value, max_value):
-    # Limit value between other two values
-    return max(min_value, min(max_value, value))
 
 
 def wrap_to_pi(angle):
@@ -29,7 +24,6 @@ def wrap_to_pi(angle):
 
     return angle
 
-MAX_ANGLE_TURN = math.pi / 4
 
 class ReynoldsRulesNode(RuleNode):
     def __init__(self):
@@ -116,13 +110,13 @@ class ReynoldsRulesNode(RuleNode):
         current_angle = 2 * math.atan2(current_orientation.z, current_orientation.w)
         error_angle = wrap_to_pi(math.atan2(vector.y, vector.x) - current_angle)
 
-        if error_angle > MAX_ANGLE_TURN or error_angle < -MAX_ANGLE_TURN:
-            linear_vel = 0
-        else:
-            linear_vel = self.linear_mult * calc_length(1, vector)
-
-        twist.linear.x = clamp(0, linear_vel, self.threshold_vel)
         twist.angular.z = self.angular_mult * error_angle
+
+        # reduce linear speed exponentially when turning to shrink the turning radius
+        linear_vel = (
+            self.linear_mult * calc_length(vector) * math.exp(-abs(twist.angular.z))
+        )
+        twist.linear.x = min(linear_vel, self.threshold_vel)
 
         return twist
 
@@ -153,8 +147,7 @@ class ReynoldsRulesNode(RuleNode):
                 total_vector.x += weight * rule[i].x
                 total_vector.y += weight * rule[i].y
 
-                if calc_length(1, total_vector) > self.threshold_vel:
-                    print("prioritazing")
+                if calc_length(total_vector) > self.threshold_vel:
                     break
 
             vel = self.vector2twist(total_vector, self.robots[i].pose.pose.orientation)
