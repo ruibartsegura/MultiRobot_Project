@@ -136,7 +136,7 @@ class Nav2PointRuleNode(RuleNode):
         while queue:
             current_pos, path = queue.pop(0)
 
-            # Check if we are currentrly in the target
+            # Check if we are already in the target
             if current_pos == target_pos:
                 return [waypoint_positions[pos] for pos in path]
 
@@ -269,17 +269,17 @@ class Nav2PointRuleNode(RuleNode):
         average_position.x = average_position.x / self.n_robots
         average_position.y = average_position.y / self.n_robots
 
+        # Delete the waypoint from the path if the swarm has arrived
         if (calc_distance(average_position, self.path[0]) < self.distance_threshold):
             if (self.path[0] != self.point):
                 self.path.pop(0)
         nav2point_vectors = VectorArray()
-        print("closer_2_start ", closer_2_start)
         
         dist = None
         closer_2_target = Point()
         for wp in self.waypoints:
             if (dist == None or calc_distance(self.point, wp) < dist):
-                dist = calc_distance(start, wp)
+                dist = calc_distance(closer_2_target, wp)
                 closer_2_target = wp
         nav2point_vectors = VectorArray()
 
