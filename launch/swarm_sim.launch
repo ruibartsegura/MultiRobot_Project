@@ -48,6 +48,7 @@
       point_x : -4
       point_y : 0
       threshold_vel: 0.6
+      distance_to_waypoint: 0.3
     </rosparam>
   </node>
 
