@@ -15,8 +15,8 @@
       alignment_weight: 0.4
       nav2point_weight: 0.6
       cohesion_weight: 0.4
-      obstacle_avoidance_weight: 0.9
-      max_linear_vel: 0.55
+      obstacle_avoidance_weight: 0.8
+      max_linear_vel: 0.5
       min_linear_vel: 0.01
     </rosparam>
   </node>
