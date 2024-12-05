@@ -223,6 +223,16 @@ class Nav2PointRuleNode(RuleNode):
             if (self.path[0] != self.point):
                 self.path.pop(0)
         nav2point_vectors = VectorArray()
+        print("closer_2_start ", closer_2_start)
+        
+        dist = None
+        closer_2_target = Point()
+        for wp in self.waypoints:
+            if (dist == None or calc_distance(self.point, wp) < dist):
+                dist = calc_distance(start, wp)
+                closer_2_target = wp
+        nav2point_vectors = VectorArray()
+        print("closer_2_target ", closer_2_target)
 
         for robot in self.robots:
             nav2point_vector = self.calc_vector(robot.pose.pose.position, self.path[0])
