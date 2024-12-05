@@ -54,7 +54,7 @@
   <!-- stub for the map server -->
   <node pkg="reynolds_rules" type="MapStubNode.py" name="map">
     <rosparam>
-      map_file : "hard_maze_10x10.json"
+      map_file : "maps/hard_maze_10x10.json"
     </rosparam>
   </node>
 </launch>
