@@ -7,7 +7,7 @@
   <node pkg="sphero_stage" type="start.py" name="sphero_stage" required="true" />
 
   <!-- Principal Node. Head of the system -->
-  <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" output="screen" >
+  <node pkg="reynolds_rules" type="ReynoldsRulesNode.py" name="reynolds_rules_node" required="true" >
     <rosparam>
       linear_mult: 0.6
       angular_mult: 2
@@ -43,10 +43,10 @@
     </rosparam>
   </node>
 
-  <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule">
+  <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule" output="screen">
     <rosparam>
-      point_x : -4
-      point_y : 0
+      point_x : 0
+      point_y : 5
     </rosparam>
   </node>
 
