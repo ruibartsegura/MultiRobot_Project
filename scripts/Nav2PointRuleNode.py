@@ -30,6 +30,11 @@ class Nav2PointRuleNode(RuleNode):
         self.point.y = rospy.get_param("~point_y", 0)
         self.threshold_vel = rospy.get_param("~threshold_vel", 2)
 
+        self.prev_point = Point()
+        self.prev_point.x = None
+        self.prev_point.y = None
+        
+
         print(f"  point_x: {self.point.x}")
         print(f"  point_y: {self.point.y}")
 
@@ -40,6 +45,11 @@ class Nav2PointRuleNode(RuleNode):
                 wp.x = x
                 wp.y = y
                 self.waypoints.append(wp)
+
+        # Path of waypoints that the swarm will follow
+        self.path = None
+
+        self.distance_threshold = 0.3
 
         self.map: OccupancyGrid | None = None
         rospy.Subscriber("map", OccupancyGrid, self.callback_map)
@@ -121,42 +131,100 @@ class Nav2PointRuleNode(RuleNode):
 
         return vector
 
+    def find_path_through_waypoints(self, start: Point, target: Point) -> List[Point]:
+        """
+        Find a route from `start` to `target` using BFS only between the waypoints,
+        ensuring that paths between neighbors are clear.
+        """
+        start_pos = (start.x, start.y)
+        target_pos = (target.x, target.y)
+        
+        queue = [(start_pos, [start_pos])]
+        visited = set()
+        visited.add(start_pos)
+
+        waypoint_positions = {(wp.x, wp.y): wp for wp in self.waypoints}
+
+        while queue:
+            current_pos, path = queue.pop(0)
+
+            if current_pos == target_pos:
+                return [waypoint_positions[pos] for pos in path]
+
+            current_wp = waypoint_positions[current_pos]
+            neighbors = self.find_neighbors(self.waypoints, current_wp)
+
+            for neighbor in neighbors:
+                neighbor_pos = (neighbor.x, neighbor.y)
+                if neighbor_pos not in visited and self.is_path_clear(current_pos, neighbor_pos):
+                    visited.add(neighbor_pos)
+                    queue.append((neighbor_pos, path + [neighbor_pos]))
+
+        rospy.logwarn("No available route found..")
+        return []
+
     # Make and publish array of velocity vector to given point
     def control_cycle(self, _):
         # Check if there is a new target point
         self.point.x = rospy.get_param("~point_x", self.point.x)
         self.point.y = rospy.get_param("~point_y", self.point.y)
 
-        # Get the closer waypoint to the position of the robots
-        start = Point()
-        for robot in self.robots:
-            start.x += robot.pose.pose.position.x
-            start.y += robot.pose.pose.position.y
-        
-        start.x = start.x / self.n_robots
-        start.y = start.y / self.n_robots
+        if (self.point.x != self.prev_point.x or self.point.y != self.prev_point.y):
 
-        dist = None
-        closer_2_start = Point()
-        for wp in self.waypoints:
-            if (dist == None or calc_distance(start, wp) < dist):
-                dist = calc_distance(start, wp)
-                closer_2_start = wp
-        nav2point_vectors = VectorArray()
-        print("closer_2_start ", closer_2_start)
+            # Get the closer waypoint to the position of the robots
+            start = Point()
+            for robot in self.robots:
+                start.x += robot.pose.pose.position.x
+                start.y += robot.pose.pose.position.y
+            
+            start.x = start.x / self.n_robots
+            start.y = start.y / self.n_robots
+
+            dist = None
+            closer_2_start = Point()
+            for wp in self.waypoints:
+                if (dist == None or calc_distance(start, wp) < dist):
+                    dist = calc_distance(start, wp)
+                    closer_2_start = wp
+            nav2point_vectors = VectorArray()
+            
+            dist = None
+            closer_2_target = Point()
+            for wp in self.waypoints:
+            
+                if (dist == None or calc_distance(self.point, wp) < dist):
+                    dist = calc_distance(self.point, wp)
+                    closer_2_target = wp
+
+            print(closer_2_target)
+            self.path = self.find_path_through_waypoints(closer_2_start, closer_2_target)
+
+            self.path.append(self.point)
+            if self.path:
+                rospy.loginfo(f"Route found: {[f'({p.x}, {p.y})' for p in self.path]}")
+            else:
+                rospy.logwarn("No available route found.")
+
+        # Check if the swarm arrive to the waypoint
+        average_position = Point()
+        for robot in self.robots:
+            average_position.x += robot.pose.pose.position.x
+            average_position.y += robot.pose.pose.position.y
         
-        dist = None
-        closer_2_target = Point()
-        for wp in self.waypoints:
-            if (dist == None or calc_distance(self.point, wp) < dist):
-                dist = calc_distance(start, wp)
-                closer_2_target = wp
+        average_position.x = average_position.x / self.n_robots
+        average_position.y = average_position.y / self.n_robots
+
+        if (calc_distance(average_position, self.path[0]) < self.distance_threshold):
+            if (self.path[0] != self.point):
+                self.path.pop(0)
         nav2point_vectors = VectorArray()
-        print("closer_2_target ", closer_2_target)
 
         for robot in self.robots:
-            nav2point_vector = self.calc_vector(robot.pose.pose.position, self.point)
+            nav2point_vector = self.calc_vector(robot.pose.pose.position, self.path[0])
             nav2point_vectors.vectors.append(nav2point_vector)
+
+        self.prev_point.x = self.point.x
+        self.prev_point.y = self.point.y
 
         self.pub.publish(nav2point_vectors)
 

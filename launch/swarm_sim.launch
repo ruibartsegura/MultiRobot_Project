@@ -45,8 +45,8 @@
 
   <node pkg="reynolds_rules" type="Nav2PointRuleNode.py" name="nav2point_rule" output="screen">
     <rosparam>
-      point_x : 0
-      point_y : 5
+      point_x : 1
+      point_y : 4
     </rosparam>
   </node>
 
