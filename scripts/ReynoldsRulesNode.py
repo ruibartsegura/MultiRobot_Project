@@ -25,9 +25,12 @@ def wrap_to_pi(angle):
     return angle
 
 
+MAX_VEL_DIFF_FACTOR = 0.5
+
+
 class ReynoldsRulesNode(RuleNode):
     def __init__(self):
-        super().__init__("null")
+        super().__init__("reynolds_rules")
 
         # Get threshold for priorities
         self.linear_mult = rospy.get_param("~linear_mult", 1.0)
@@ -68,6 +71,7 @@ class ReynoldsRulesNode(RuleNode):
 
         self.init_rule_vectors()
         self.init_rule_subscribers()
+        self.last_linear_vel = 0
 
     def init_rule_vectors(self):
         # Variables to store the value of the rule vectors
@@ -115,12 +119,18 @@ class ReynoldsRulesNode(RuleNode):
 
         # reduce linear speed exponentially when turning to shrink the turning radius
         linear_vel = (
-            self.linear_mult
-            * calc_length(vector)
-            * math.exp(-abs(twist.angular.z)) + self.min_linear_vel
+            self.linear_mult * calc_length(vector) * math.exp(-abs(twist.angular.z))
+            + self.min_linear_vel
         )
 
         twist.linear.x = min(linear_vel, self.max_linear_vel)
+
+        # If change in velocity is too big, reduce linear velocity (smoother movement)
+        linear_vel_change = math.fabs(twist.linear.x - self.last_linear_vel)
+        if linear_vel_change > MAX_VEL_DIFF_FACTOR * self.last_linear_vel:
+            twist.linear.x = (2 * twist.linear.x + self.last_linear_vel) / 3
+
+        self.last_linear_vel = twist.linear.x
         return twist
 
     # Summ vectors of each element of the swarm and publish them to its vel topic
