@@ -2,11 +2,14 @@
 
 import rospy
 import math
+import numpy as np
 
 from RuleNode import RuleNode
-from geometry_msgs.msg import Point
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Point, Vector3
+from nav_msgs.msg import OccupancyGrid
 from reynolds_rules.msg import VectorArray
+
+from navigation.GridMap import GridMap
 
 
 class Nav2PointRuleNode(RuleNode):
@@ -17,11 +20,19 @@ class Nav2PointRuleNode(RuleNode):
         self.point.x = rospy.get_param("~point_x", 0)
         self.point.y = rospy.get_param("~point_y", 0)
         self.threshold_vel = rospy.get_param("~threshold_vel", 2)
+        self.grid_resolution = rospy.get_param("~grid_resolution", 10)
 
         print(f"  point_x: {self.point.x}")
         print(f"  point_y: {self.point.y}")
 
+        self.map: OccupancyGrid | None = None
+        rospy.Subscriber("map", OccupancyGrid, self.callback_map)
+
         self.startTimer()
+
+    def callback_map(self, msg: OccupancyGrid):
+        self.map = msg
+        self.grid = GridMap(msg, self.grid_resolution)
 
     # Return vector from point 1 to 2
     # Limits vector to a threshold
